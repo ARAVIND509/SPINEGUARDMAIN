@@ -90,17 +90,14 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } 
-  // PRODUCTION MODE → serve built frontend
-  else {
+  // // production static serving
+const distPath = path.resolve(process.cwd(), "dist");
 
-    const distPath = path.resolve(process.cwd(), "dist");
+app.use(express.static(distPath));
 
-    app.use(express.static(distPath));
-
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
 
   // Railway provides PORT env variable
   const port = parseInt(process.env.PORT || "5000", 10);
