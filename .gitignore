@@ -1,4 +1,11 @@
-node_modules
-dist
+node_modules/
+dist/
+build/
 .env
-__pycache__
+__pycache__/
+*.pt
+*.pth
+*.h5
+*.zip
+prisma/dev.db
+*.db
