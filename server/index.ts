@@ -95,3 +95,10 @@ app.use((req, res, next) => {
     log(`serving on ${host}:${port}`);
   });
 })();
+import path from "path";
+
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
