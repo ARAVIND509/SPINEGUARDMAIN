@@ -107,7 +107,7 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } 
   // // production static serving
-const distPath = path.resolve(process.cwd(), "dist");
+const distPath = path.resolve(process.cwd(), "dist/public");
 
 app.use(express.static(distPath));
 
