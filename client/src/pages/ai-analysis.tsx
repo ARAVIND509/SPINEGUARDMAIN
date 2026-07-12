@@ -228,7 +228,7 @@ export default function AIAnalysis() {
 
   const selectHeatmapByCondition = (condition: string) => {
     if (!results?.gradCamHeatmaps) return;
-    const idx = results.gradCamHeatmaps.findIndex(h => h.condition === condition);
+    const idx = results?.gradCamHeatmaps.findIndex(h => h.condition === condition);
     if (idx !== -1) {
       setActiveHeatmapIdx(idx);
     }
@@ -284,7 +284,7 @@ export default function AIAnalysis() {
 
     // Parse heatmap regions to extract specific anatomical targets (Fallback for older scans or pure client-side paths)
     const heatmapTargets = results.heatmapTargets?.length ? results.heatmapTargets : (() => {
-      const heatmaps = results.gradCamHeatmaps || [];
+      const heatmaps = results?.gradCamHeatmaps || [];
       const targets: Array<{ region: string, condition: string, severity: SeverityLevel, intensity: number }> = [];
 
       heatmaps.forEach(heatmap => {
@@ -460,15 +460,15 @@ export default function AIAnalysis() {
                       <Activity className="h-4 w-4 text-emerald-500" /> Functional Biomechanics
                     </h3>
                     <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                      {results.postureSimulation.confidence}% CONF
+                      {results?.postureSimulation.confidence}% CONF
                     </Badge>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                     {[
-                      { label: 'Cervical', val: results.postureSimulation.spinalCurvature?.cervical },
-                      { label: 'Thoracic', val: results.postureSimulation.spinalCurvature?.thoracic },
-                      { label: 'Lumbar', val: results.postureSimulation.spinalCurvature?.lumbar }
+                      { label: 'Cervical', val: results?.postureSimulation.spinalCurvature?.cervical },
+                      { label: 'Thoracic', val: results?.postureSimulation.spinalCurvature?.thoracic },
+                      { label: 'Lumbar', val: results?.postureSimulation.spinalCurvature?.lumbar }
                     ].map((c, i) => (
                       <div key={i} className="p-2.5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-center flex flex-col justify-center min-w-0">
                         <p className="text-[7px] text-muted-foreground uppercase font-bold mb-1 truncate">{c.label}</p>
@@ -484,7 +484,7 @@ export default function AIAnalysis() {
                       <div className="flex-1 space-y-1">
                         <p className="text-[10px] text-muted-foreground uppercase font-bold">Compensatory Patterns</p>
                         <div className="flex flex-wrap gap-1">
-                          {results.postureSimulation.compensatoryPatterns.map((p, i) => (
+                          {results?.postureSimulation.compensatoryPatterns.map((p, i) => (
                             <Badge key={i} variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-700 border-none">{p}</Badge>
                           ))}
                         </div>
@@ -494,7 +494,7 @@ export default function AIAnalysis() {
                     <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
                       <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">Functional Limitations</p>
                       <ul className="space-y-1">
-                        {(results.postureSimulation.functionalLimitations ?? []).map((l, i) => (
+                        {(results?.postureSimulation.functionalLimitations ?? []).map((l, i) => (
                           <li key={i} className="text-xs flex items-center gap-2">
                             <div className="w-1 h-1 rounded-full bg-emerald-500" />
                             {l}
@@ -527,35 +527,35 @@ export default function AIAnalysis() {
                         <Brain className="h-24 w-24 text-primary rotate-12" />
                       </div>
                       <div
-                        onClick={() => selectHeatmapByCondition(results.primaryFinding!.condition)}
-                        className={`p-3 rounded-xl border flex flex-col gap-2 transition-all cursor-pointer min-w-0 ${activeHeatmap?.condition === results.primaryFinding.condition
+                        onClick={() => selectHeatmapByCondition(results?.primaryFinding!.condition)}
+                        className={`p-3 rounded-xl border flex flex-col gap-2 transition-all cursor-pointer min-w-0 ${activeHeatmap?.condition === results?.primaryFinding.condition
                           ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]'
                           : 'bg-foreground/5 border-border/50 hover:bg-foreground/10'
                           }`}
                       >
                         <div className="min-w-0">
-                          <h4 className="text-2xl font-bold text-primary break-words leading-tight">{results.primaryFinding.condition}</h4>
-                          <p className="text-xs text-muted-foreground uppercase mt-1 break-words">Location: {results.primaryFinding.location}</p>
+                          <h4 className="text-2xl font-bold text-primary break-words leading-tight">{results?.primaryFinding.condition}</h4>
+                          <p className="text-xs text-muted-foreground uppercase mt-1 break-words">Location: {results?.primaryFinding.location}</p>
                         </div>
                         <div className="flex justify-between items-center">
                           <Badge variant="outline" className={`bg-primary/20 text-primary border-primary/30 text-[10px] font-bold px-2 py-0.5 whitespace-nowrap`}>
-                            {results.primaryFinding.confidence}% CONF
+                            {results?.primaryFinding.confidence}% CONF
                           </Badge>
                         </div>
                       </div>
 
                       <div className="space-y-4 mt-6">
                         <div className="flex items-center gap-3">
-                          <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${results.primaryFinding.severity === 'severe' ? 'bg-red-500 text-white' :
-                            results.primaryFinding.severity === 'moderate' ? 'bg-orange-500 text-white' :
+                          <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${results?.primaryFinding.severity === 'severe' ? 'bg-red-500 text-white' :
+                            results?.primaryFinding.severity === 'moderate' ? 'bg-orange-500 text-white' :
                               'bg-emerald-500 text-white'
                             }`}>
-                            {results.primaryFinding.severity}
+                            {results?.primaryFinding.severity}
                           </div>
                           <div className="h-1.5 flex-1 bg-primary/20 rounded-full overflow-hidden">
                             <motion.div
                               initial={{ width: 0 }}
-                              animate={{ width: `${results.primaryFinding.confidence}%` }}
+                              animate={{ width: `${results?.primaryFinding.confidence}%` }}
                               className="h-full bg-primary"
                             ></motion.div>
                           </div>
@@ -609,19 +609,19 @@ export default function AIAnalysis() {
                       <FileText className="h-3 w-3" /> Clinical Impression
                     </p>
                     <p className="text-xs leading-relaxed text-foreground/80 bg-primary/5 p-4 rounded-2xl border border-primary/10 italic">
-                      "{results.summary}"
+                      "{results?.summary}"
                     </p>
                   </div>
                 )}
 
                 {/* Risk Zones */}
-                {results?.riskZones && results.riskZones.length > 0 && (
+                {results?.riskZones && results?.riskZones.length > 0 && (
                   <div className="pt-4">
                     <p className="text-[10px] text-muted-foreground font-bold uppercase mb-2 flex items-center gap-2">
                       <Radar className="h-3 w-3" /> Anatomical Risk Zones
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {results.riskZones.map((zone, i) => (
+                      {results?.riskZones.map((zone, i) => (
                         <Badge key={i} variant="secondary" className="bg-rose-500/10 text-rose-600 border-none text-[9px]">
                           {zone}
                         </Badge>
@@ -662,7 +662,7 @@ export default function AIAnalysis() {
                   Individual AI-generated heatmaps per detected condition. Select a disease to view its activation map.
                 </p>
               </div>
-              {results.gradCamHeatmaps && results.gradCamHeatmaps.length > 0 && (
+              {results?.gradCamHeatmaps && results?.gradCamHeatmaps.length > 0 && (
                 <Button
                   variant="outline"
                   onClick={() => setMaximizedView('heatmap')}
@@ -674,10 +674,10 @@ export default function AIAnalysis() {
             </div>
 
             {/* Disease Navigation Pills */}
-            {results.gradCamHeatmaps && results.gradCamHeatmaps.length > 0 ? (
+            {results?.gradCamHeatmaps && results?.gradCamHeatmaps.length > 0 ? (
               <>
                 <div className="flex flex-wrap gap-2">
-                  {results.gradCamHeatmaps.map((heatmap, idx) => {
+                  {results?.gradCamHeatmaps.map((heatmap, idx) => {
                     const isActive = activeHeatmapIdx === idx;
                     const sev = (heatmap.severity || 'mild') as keyof typeof SEVERITY_COLORS;
                     const style = SEVERITY_COLORS[sev] || SEVERITY_COLORS.mild;
@@ -842,7 +842,7 @@ export default function AIAnalysis() {
                     {/* Navigation hint */}
                     <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">
-                        Viewing {(activeHeatmapIdx ?? 0) + 1} of {results.gradCamHeatmaps?.length ?? 0} detected conditions
+                        Viewing {(activeHeatmapIdx ?? 0) + 1} of {results?.gradCamHeatmaps?.length ?? 0} detected conditions
                       </p>
                       <div className="flex gap-2">
                         <Button
@@ -858,8 +858,8 @@ export default function AIAnalysis() {
                           size="sm"
                           variant="ghost"
                           className="h-7 px-3 text-[10px]"
-                          disabled={activeHeatmapIdx === (results.gradCamHeatmaps?.length ?? 1) - 1}
-                          onClick={() => setActiveHeatmapIdx(Math.min((results.gradCamHeatmaps?.length ?? 1) - 1, (activeHeatmapIdx ?? 0) + 1))}
+                          disabled={activeHeatmapIdx === (results?.gradCamHeatmaps?.length ?? 1) - 1}
+                          onClick={() => setActiveHeatmapIdx(Math.min((results?.gradCamHeatmaps?.length ?? 1) - 1, (activeHeatmapIdx ?? 0) + 1))}
                         >
                           Next →
                         </Button>
@@ -889,7 +889,7 @@ export default function AIAnalysis() {
             <h2 className="text-2xl font-bold mb-4">Advanced Analysis Features</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Soft Tissue Degeneration Card */}
-              {results.softTissueDegeneration && (
+              {results?.softTissueDegeneration && (
                 <Card className="glass-card">
                   <CardHeader>
                     <div className="flex items-center gap-3">
@@ -898,11 +898,11 @@ export default function AIAnalysis() {
                       </div>
                       <div>
                         <CardTitle className="text-lg">Soft Tissue Degeneration</CardTitle>
-                        <Badge className={`${results.softTissueDegeneration.severity === 'severe' ? 'bg-rose-500' :
-                          results.softTissueDegeneration.severity === 'moderate' ? 'bg-orange-500' :
-                            results.softTissueDegeneration.severity === 'mild' ? 'bg-yellow-500' : 'bg-green-500'
+                        <Badge className={`${results?.softTissueDegeneration.severity === 'severe' ? 'bg-rose-500' :
+                          results?.softTissueDegeneration.severity === 'moderate' ? 'bg-orange-500' :
+                            results?.softTissueDegeneration.severity === 'mild' ? 'bg-yellow-500' : 'bg-green-500'
                           } text-white`}>
-                          {results.softTissueDegeneration.severity.toUpperCase()}
+                          {results?.softTissueDegeneration.severity.toUpperCase()}
                         </Badge>
                       </div>
                     </div>
@@ -915,11 +915,11 @@ export default function AIAnalysis() {
                         <ul className="space-y-1">
                           <li className="text-xs flex flex-col">
                             <span className="text-muted-foreground">Anterior:</span>
-                            <span>{results.softTissueDegeneration.ligamentChanges?.anterior}</span>
+                            <span>{results?.softTissueDegeneration.ligamentChanges?.anterior}</span>
                           </li>
                           <li className="text-xs flex flex-col">
                             <span className="text-muted-foreground">Posterior:</span>
-                            <span>{results.softTissueDegeneration.ligamentChanges?.posterior}</span>
+                            <span>{results?.softTissueDegeneration.ligamentChanges?.posterior}</span>
                           </li>
                         </ul>
                       </div>
@@ -928,19 +928,19 @@ export default function AIAnalysis() {
                         <div className="space-y-1">
                           <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase font-bold">
                             <span>Tendon Degeneration</span>
-                            <span>{results.softTissueDegeneration.tendonDegeneration?.percentage}%</span>
+                            <span>{results?.softTissueDegeneration.tendonDegeneration?.percentage}%</span>
                           </div>
-                          <Progress value={results.softTissueDegeneration.tendonDegeneration?.percentage} className="h-1.5" />
+                          <Progress value={results?.softTissueDegeneration.tendonDegeneration?.percentage} className="h-1.5" />
                         </div>
                         <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 border border-primary/10">
                           <div className="text-center flex-1">
                             <p className="text-[8px] text-muted-foreground uppercase font-bold">Hydration</p>
-                            <p className="text-sm font-bold text-primary">{results.softTissueDegeneration.discChanges?.hydration}%</p>
+                            <p className="text-sm font-bold text-primary">{results?.softTissueDegeneration.discChanges?.hydration}%</p>
                           </div>
                           <div className="w-px h-8 bg-primary/20 mx-2" />
                           <div className="text-center flex-1">
                             <p className="text-[8px] text-muted-foreground uppercase font-bold">Height Loss</p>
-                            <p className="text-sm font-bold text-primary">{results.softTissueDegeneration.discChanges?.heightLoss}mm</p>
+                            <p className="text-sm font-bold text-primary">{results?.softTissueDegeneration.discChanges?.heightLoss}mm</p>
                           </div>
                         </div>
                       </div>
@@ -950,7 +950,7 @@ export default function AIAnalysis() {
               )}
 
               {/* Hidden Abnormality Detection Card */}
-              {results.hiddenAbnormality && (
+              {results?.hiddenAbnormality && (
                 <Card className="glass-card">
                   <CardHeader>
                     <div className="flex items-center gap-3">
@@ -960,7 +960,7 @@ export default function AIAnalysis() {
                       <div>
                         <CardTitle className="text-lg">Hidden Abnormality Detection</CardTitle>
                         <Badge variant="outline" className="border-amber-500/30 text-amber-500">
-                          {results.hiddenAbnormality.severity.toUpperCase()}
+                          {results?.hiddenAbnormality.severity.toUpperCase()}
                         </Badge>
                       </div>
                     </div>
@@ -968,40 +968,40 @@ export default function AIAnalysis() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Infection Selection */}
-                      <div className={`p-3 rounded-2xl border ${results.hiddenAbnormality.infections?.detected ? 'bg-rose-500/5 border-rose-500/20' : 'bg-muted/30 border-border'}`}>
+                      <div className={`p-3 rounded-2xl border ${results?.hiddenAbnormality.infections?.detected ? 'bg-rose-500/5 border-rose-500/20' : 'bg-muted/30 border-border'}`}>
                         <div className="flex items-center gap-2 mb-2">
-                          <Siren className={`h-3 w-3 ${results.hiddenAbnormality.infections?.detected ? 'text-rose-500' : 'text-muted-foreground'}`} />
+                          <Siren className={`h-3 w-3 ${results?.hiddenAbnormality.infections?.detected ? 'text-rose-500' : 'text-muted-foreground'}`} />
                           <span className="text-[10px] font-bold uppercase">Infection Risk</span>
                         </div>
-                        <p className="text-xs font-semibold">{results.hiddenAbnormality.infections?.type}</p>
-                        {results.hiddenAbnormality.infections?.location.length > 0 && (
-                          <p className="text-[10px] text-muted-foreground mt-1">Focus: {results.hiddenAbnormality.infections?.location.join(', ')}</p>
+                        <p className="text-xs font-semibold">{results?.hiddenAbnormality.infections?.type}</p>
+                        {results?.hiddenAbnormality.infections?.location.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground mt-1">Focus: {results?.hiddenAbnormality.infections?.location.join(', ')}</p>
                         )}
                       </div>
 
                       {/* Tumor Selection */}
-                      <div className={`p-3 rounded-2xl border ${results.hiddenAbnormality.tumorProbability?.detected ? 'bg-orange-500/5 border-orange-500/20' : 'bg-muted/30 border-border'}`}>
+                      <div className={`p-3 rounded-2xl border ${results?.hiddenAbnormality.tumorProbability?.detected ? 'bg-orange-500/5 border-orange-500/20' : 'bg-muted/30 border-border'}`}>
                         <div className="flex items-center gap-2 mb-2">
-                          <Microscope className={`h-3 w-3 ${results.hiddenAbnormality.tumorProbability?.detected ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                          <Microscope className={`h-3 w-3 ${results?.hiddenAbnormality.tumorProbability?.detected ? 'text-orange-500' : 'text-muted-foreground'}`} />
                           <span className="text-[10px] font-bold uppercase">Tumor Probability</span>
                         </div>
-                        <p className="text-xs font-semibold">{results.hiddenAbnormality.tumorProbability?.type}</p>
-                        {results.hiddenAbnormality.tumorProbability?.detected && (
+                        <p className="text-xs font-semibold">{results?.hiddenAbnormality.tumorProbability?.type}</p>
+                        {results?.hiddenAbnormality.tumorProbability?.detected && (
                           <div className="flex justify-between items-center mt-2">
-                            <span className="text-[9px] text-muted-foreground">Size: {results.hiddenAbnormality.tumorProbability?.size}</span>
+                            <span className="text-[9px] text-muted-foreground">Size: {results?.hiddenAbnormality.tumorProbability?.size}</span>
                             <Badge className="bg-orange-500/20 text-orange-600 text-[8px] border-none px-1.5 h-4">
-                              {results.hiddenAbnormality.tumorProbability?.malignancyRisk}% RISK
+                              {results?.hiddenAbnormality.tumorProbability?.malignancyRisk}% RISK
                             </Badge>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {(results.hiddenAbnormality.subtleFindings?.length ?? 0) > 0 && (
+                    {(results?.hiddenAbnormality.subtleFindings?.length ?? 0) > 0 && (
                       <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
                         <p className="text-[9px] text-muted-foreground uppercase font-bold mb-2">Subtle Findings</p>
                         <ul className="space-y-1">
-                          {(results.hiddenAbnormality.subtleFindings ?? []).map((finding, idx) => (
+                          {(results?.hiddenAbnormality.subtleFindings ?? []).map((finding, idx) => (
                             <li key={idx} className="text-[10px] flex items-center gap-2">
                               <div className="w-1 h-1 rounded-full bg-amber-500" />
                               {finding}
@@ -1015,7 +1015,7 @@ export default function AIAnalysis() {
               )}
 
               {/* 3D Posture Simulation Card */}
-              {results.postureSimulation && (
+              {results?.postureSimulation && (
                 <Card className="glass-card">
                   <CardHeader>
                     <div className="flex items-center gap-3">
@@ -1025,7 +1025,7 @@ export default function AIAnalysis() {
                       <div>
                         <CardTitle className="text-lg">3D Posture Simulation</CardTitle>
                         <Badge variant="outline" className="border-blue-500/30 text-blue-500">
-                          {results.postureSimulation.severity.toUpperCase()}
+                          {results?.postureSimulation.severity.toUpperCase()}
                         </Badge>
                       </div>
                     </div>
@@ -1034,33 +1034,33 @@ export default function AIAnalysis() {
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
                         <p className="text-[8px] text-muted-foreground uppercase font-bold">Cervical</p>
-                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature?.cervical}°</p>
+                        <p className="text-xs font-bold text-primary">{results?.postureSimulation.spinalCurvature?.cervical}°</p>
                       </div>
                       <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
                         <p className="text-[8px] text-muted-foreground uppercase font-bold">Thoracic</p>
-                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature?.thoracic}°</p>
+                        <p className="text-xs font-bold text-primary">{results?.postureSimulation.spinalCurvature?.thoracic}°</p>
                       </div>
                       <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
                         <p className="text-[8px] text-muted-foreground uppercase font-bold">Lumbar</p>
-                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature?.lumbar}°</p>
+                        <p className="text-xs font-bold text-primary">{results?.postureSimulation.spinalCurvature?.lumbar}°</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <p className="text-[9px] text-muted-foreground uppercase font-bold">Functional Limitations</p>
                       <div className="flex flex-wrap gap-1">
-                        {(results.postureSimulation.functionalLimitations ?? []).map((lim, idx) => (
+                        {(results?.postureSimulation.functionalLimitations ?? []).map((lim, idx) => (
                           <Badge key={idx} variant="secondary" className="text-[8px] bg-blue-500/5 text-blue-600 border-none">{lim}</Badge>
                         ))}
-                        {(results.postureSimulation.functionalLimitations?.length ?? 0) === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
+                        {(results?.postureSimulation.functionalLimitations?.length ?? 0) === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
                       </div>
                     </div>
 
                     <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
                       <p className="text-[9px] text-muted-foreground uppercase font-bold mb-1">Posture Models</p>
                       <div className="grid grid-cols-1 gap-1">
-                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Standing:</span> <span>{results.postureSimulation.postureModels?.standing}</span></div>
-                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Sitting:</span> <span>{results.postureSimulation.postureModels?.sitting}</span></div>
+                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Standing:</span> <span>{results?.postureSimulation.postureModels?.standing}</span></div>
+                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Sitting:</span> <span>{results?.postureSimulation.postureModels?.sitting}</span></div>
                       </div>
                     </div>
                   </CardContent>
@@ -1068,7 +1068,7 @@ export default function AIAnalysis() {
               )}
 
               {/* Neural Perfusion / Blood Flow Analysis Card */}
-              {results.bloodFlowAnalysis && (
+              {results?.bloodFlowAnalysis && (
                 <Card className="glass-card">
                   <CardHeader>
                     <div className="flex items-center justify-between">
@@ -1079,11 +1079,11 @@ export default function AIAnalysis() {
                         <div>
                           <CardTitle className="text-lg">Blood Flow Analysis</CardTitle>
                           <Badge className={
-                            results.bloodFlowAnalysis.severity === 'severe' ? 'bg-rose-500' :
-                              results.bloodFlowAnalysis.severity === 'moderate' ? 'bg-orange-500' :
+                            results?.bloodFlowAnalysis.severity === 'severe' ? 'bg-rose-500' :
+                              results?.bloodFlowAnalysis.severity === 'moderate' ? 'bg-orange-500' :
                                 'bg-emerald-500'
                           }>
-                            {results.bloodFlowAnalysis.severity.toUpperCase()}
+                            {results?.bloodFlowAnalysis.severity.toUpperCase()}
                           </Badge>
                         </div>
                       </div>
@@ -1092,33 +1092,33 @@ export default function AIAnalysis() {
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
                       <div>
-                        <p className="text-2xl font-bold text-primary">{results.bloodFlowAnalysis.spinalCordPerfusion?.flowRate}</p>
-                        <p className="text-[8px] text-muted-foreground uppercase font-bold">ML/MIN PERFUSION ({results.bloodFlowAnalysis.spinalCordPerfusion?.level})</p>
+                        <p className="text-2xl font-bold text-primary">{results?.bloodFlowAnalysis.spinalCordPerfusion?.flowRate}</p>
+                        <p className="text-[8px] text-muted-foreground uppercase font-bold">ML/MIN PERFUSION ({results?.bloodFlowAnalysis.spinalCordPerfusion?.level})</p>
                       </div>
-                      <Badge variant="outline" className="text-[9px] uppercase">{results.bloodFlowAnalysis.spinalCordPerfusion?.adequacy}</Badge>
+                      <Badge variant="outline" className="text-[9px] uppercase">{results?.bloodFlowAnalysis.spinalCordPerfusion?.adequacy}</Badge>
                     </div>
 
                     <div className="space-y-2">
                       <p className="text-[9px] text-muted-foreground uppercase font-bold">Segmental Oxygenation</p>
                       <div className="grid grid-cols-5 gap-1">
-                        {(results.bloodFlowAnalysis.nerveRootOxygenation ?? []).slice(0, 5).map((n, i) => (
+                        {(results?.bloodFlowAnalysis.nerveRootOxygenation ?? []).slice(0, 5).map((n, i) => (
                           <div key={i} className="flex flex-col items-center">
                             <div className={`w-full h-1 rounded-full mb-1 ${n.oxygenation > 85 ? 'bg-emerald-500' : n.oxygenation > 70 ? 'bg-amber-500' : 'bg-rose-500'}`} />
                             <span className="text-[8px] font-mono text-muted-foreground font-bold">{n.vertebralLevel}</span>
                             <span className="text-[8px] font-mono">{n.oxygenation}%</span>
                           </div>
                         ))}
-                        {(results.bloodFlowAnalysis.nerveRootOxygenation?.length ?? 0) === 0 && (
+                        {(results?.bloodFlowAnalysis.nerveRootOxygenation?.length ?? 0) === 0 && (
                           <div className="col-span-5 text-[10px] text-muted-foreground italic text-center p-2">Standard vascular profile maintained</div>
                         )}
                       </div>
                     </div>
 
-                    {results.bloodFlowAnalysis.vascularCompromise?.detected && (
+                    {results?.bloodFlowAnalysis.vascularCompromise?.detected && (
                       <div className="p-2 rounded-lg bg-rose-500/5 border border-rose-500/20 flex items-center gap-2">
                         <AlertCircle className="h-3 w-3 text-rose-500" />
                         <span className="text-[9px] text-rose-600 font-bold uppercase truncate">
-                          Compromise: {results.bloodFlowAnalysis.vascularCompromise?.location.join(', ')}
+                          Compromise: {results?.bloodFlowAnalysis.vascularCompromise?.location.join(', ')}
                         </span>
                       </div>
                     )}
@@ -1130,14 +1130,14 @@ export default function AIAnalysis() {
         )}
 
         {/* All Conditions Checked - Full Report Section */}
-        {results && results.checkedConditions && (
+        {results && results?.checkedConditions && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <CheckCircle2 className="h-6 w-6 text-emerald-500" />
               Comprehensive Diagnostic Scan (6+ Conditions Verified)
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {results.checkedConditions.map((condition, idx) => (
+              {results?.checkedConditions.map((condition, idx) => (
                 <div key={idx} className="glass-card p-4 rounded-2xl border border-white/10 hover:border-primary/30 transition-all">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-xs font-bold uppercase tracking-wider">{condition.condition}</span>
