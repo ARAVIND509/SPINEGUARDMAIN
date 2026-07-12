@@ -6,7 +6,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
-RUN npm ci
+RUN npm install
 
 COPY . .
 RUN npm run build
@@ -16,7 +16,7 @@ FROM python:3.10-slim
 
 # Install dependencies for OpenCV and Node.js
 RUN apt-get update && apt-get install -y curl \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
