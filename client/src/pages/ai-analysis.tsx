@@ -466,9 +466,9 @@ export default function AIAnalysis() {
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                     {[
-                      { label: 'Cervical', val: results.postureSimulation.spinalCurvature.cervical },
-                      { label: 'Thoracic', val: results.postureSimulation.spinalCurvature.thoracic },
-                      { label: 'Lumbar', val: results.postureSimulation.spinalCurvature.lumbar }
+                      { label: 'Cervical', val: results.postureSimulation.spinalCurvature?.cervical },
+                      { label: 'Thoracic', val: results.postureSimulation.spinalCurvature?.thoracic },
+                      { label: 'Lumbar', val: results.postureSimulation.spinalCurvature?.lumbar }
                     ].map((c, i) => (
                       <div key={i} className="p-2.5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-center flex flex-col justify-center min-w-0">
                         <p className="text-[7px] text-muted-foreground uppercase font-bold mb-1 truncate">{c.label}</p>
@@ -494,7 +494,7 @@ export default function AIAnalysis() {
                     <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
                       <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">Functional Limitations</p>
                       <ul className="space-y-1">
-                        {results.postureSimulation.functionalLimitations.map((l, i) => (
+                        {(results.postureSimulation.functionalLimitations ?? []).map((l, i) => (
                           <li key={i} className="text-xs flex items-center gap-2">
                             <div className="w-1 h-1 rounded-full bg-emerald-500" />
                             {l}
@@ -915,11 +915,11 @@ export default function AIAnalysis() {
                         <ul className="space-y-1">
                           <li className="text-xs flex flex-col">
                             <span className="text-muted-foreground">Anterior:</span>
-                            <span>{results.softTissueDegeneration.ligamentChanges.anterior}</span>
+                            <span>{results.softTissueDegeneration.ligamentChanges?.anterior}</span>
                           </li>
                           <li className="text-xs flex flex-col">
                             <span className="text-muted-foreground">Posterior:</span>
-                            <span>{results.softTissueDegeneration.ligamentChanges.posterior}</span>
+                            <span>{results.softTissueDegeneration.ligamentChanges?.posterior}</span>
                           </li>
                         </ul>
                       </div>
@@ -928,19 +928,19 @@ export default function AIAnalysis() {
                         <div className="space-y-1">
                           <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase font-bold">
                             <span>Tendon Degeneration</span>
-                            <span>{results.softTissueDegeneration.tendonDegeneration.percentage}%</span>
+                            <span>{results.softTissueDegeneration.tendonDegeneration?.percentage}%</span>
                           </div>
-                          <Progress value={results.softTissueDegeneration.tendonDegeneration.percentage} className="h-1.5" />
+                          <Progress value={results.softTissueDegeneration.tendonDegeneration?.percentage} className="h-1.5" />
                         </div>
                         <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 border border-primary/10">
                           <div className="text-center flex-1">
                             <p className="text-[8px] text-muted-foreground uppercase font-bold">Hydration</p>
-                            <p className="text-sm font-bold text-primary">{results.softTissueDegeneration.discChanges.hydration}%</p>
+                            <p className="text-sm font-bold text-primary">{results.softTissueDegeneration.discChanges?.hydration}%</p>
                           </div>
                           <div className="w-px h-8 bg-primary/20 mx-2" />
                           <div className="text-center flex-1">
                             <p className="text-[8px] text-muted-foreground uppercase font-bold">Height Loss</p>
-                            <p className="text-sm font-bold text-primary">{results.softTissueDegeneration.discChanges.heightLoss}mm</p>
+                            <p className="text-sm font-bold text-primary">{results.softTissueDegeneration.discChanges?.heightLoss}mm</p>
                           </div>
                         </div>
                       </div>
@@ -968,40 +968,40 @@ export default function AIAnalysis() {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Infection Selection */}
-                      <div className={`p-3 rounded-2xl border ${results.hiddenAbnormality.infections.detected ? 'bg-rose-500/5 border-rose-500/20' : 'bg-muted/30 border-border'}`}>
+                      <div className={`p-3 rounded-2xl border ${results.hiddenAbnormality.infections?.detected ? 'bg-rose-500/5 border-rose-500/20' : 'bg-muted/30 border-border'}`}>
                         <div className="flex items-center gap-2 mb-2">
-                          <Siren className={`h-3 w-3 ${results.hiddenAbnormality.infections.detected ? 'text-rose-500' : 'text-muted-foreground'}`} />
+                          <Siren className={`h-3 w-3 ${results.hiddenAbnormality.infections?.detected ? 'text-rose-500' : 'text-muted-foreground'}`} />
                           <span className="text-[10px] font-bold uppercase">Infection Risk</span>
                         </div>
-                        <p className="text-xs font-semibold">{results.hiddenAbnormality.infections.type}</p>
-                        {results.hiddenAbnormality.infections.location.length > 0 && (
-                          <p className="text-[10px] text-muted-foreground mt-1">Focus: {results.hiddenAbnormality.infections.location.join(', ')}</p>
+                        <p className="text-xs font-semibold">{results.hiddenAbnormality.infections?.type}</p>
+                        {results.hiddenAbnormality.infections?.location.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground mt-1">Focus: {results.hiddenAbnormality.infections?.location.join(', ')}</p>
                         )}
                       </div>
 
                       {/* Tumor Selection */}
-                      <div className={`p-3 rounded-2xl border ${results.hiddenAbnormality.tumorProbability.detected ? 'bg-orange-500/5 border-orange-500/20' : 'bg-muted/30 border-border'}`}>
+                      <div className={`p-3 rounded-2xl border ${results.hiddenAbnormality.tumorProbability?.detected ? 'bg-orange-500/5 border-orange-500/20' : 'bg-muted/30 border-border'}`}>
                         <div className="flex items-center gap-2 mb-2">
-                          <Microscope className={`h-3 w-3 ${results.hiddenAbnormality.tumorProbability.detected ? 'text-orange-500' : 'text-muted-foreground'}`} />
+                          <Microscope className={`h-3 w-3 ${results.hiddenAbnormality.tumorProbability?.detected ? 'text-orange-500' : 'text-muted-foreground'}`} />
                           <span className="text-[10px] font-bold uppercase">Tumor Probability</span>
                         </div>
-                        <p className="text-xs font-semibold">{results.hiddenAbnormality.tumorProbability.type}</p>
-                        {results.hiddenAbnormality.tumorProbability.detected && (
+                        <p className="text-xs font-semibold">{results.hiddenAbnormality.tumorProbability?.type}</p>
+                        {results.hiddenAbnormality.tumorProbability?.detected && (
                           <div className="flex justify-between items-center mt-2">
-                            <span className="text-[9px] text-muted-foreground">Size: {results.hiddenAbnormality.tumorProbability.size}</span>
+                            <span className="text-[9px] text-muted-foreground">Size: {results.hiddenAbnormality.tumorProbability?.size}</span>
                             <Badge className="bg-orange-500/20 text-orange-600 text-[8px] border-none px-1.5 h-4">
-                              {results.hiddenAbnormality.tumorProbability.malignancyRisk}% RISK
+                              {results.hiddenAbnormality.tumorProbability?.malignancyRisk}% RISK
                             </Badge>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {results.hiddenAbnormality.subtleFindings.length > 0 && (
+                    {(results.hiddenAbnormality.subtleFindings?.length ?? 0) > 0 && (
                       <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
                         <p className="text-[9px] text-muted-foreground uppercase font-bold mb-2">Subtle Findings</p>
                         <ul className="space-y-1">
-                          {results.hiddenAbnormality.subtleFindings.map((finding, idx) => (
+                          {(results.hiddenAbnormality.subtleFindings ?? []).map((finding, idx) => (
                             <li key={idx} className="text-[10px] flex items-center gap-2">
                               <div className="w-1 h-1 rounded-full bg-amber-500" />
                               {finding}
@@ -1034,33 +1034,33 @@ export default function AIAnalysis() {
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
                         <p className="text-[8px] text-muted-foreground uppercase font-bold">Cervical</p>
-                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature.cervical}°</p>
+                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature?.cervical}°</p>
                       </div>
                       <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
                         <p className="text-[8px] text-muted-foreground uppercase font-bold">Thoracic</p>
-                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature.thoracic}°</p>
+                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature?.thoracic}°</p>
                       </div>
                       <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
                         <p className="text-[8px] text-muted-foreground uppercase font-bold">Lumbar</p>
-                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature.lumbar}°</p>
+                        <p className="text-xs font-bold text-primary">{results.postureSimulation.spinalCurvature?.lumbar}°</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <p className="text-[9px] text-muted-foreground uppercase font-bold">Functional Limitations</p>
                       <div className="flex flex-wrap gap-1">
-                        {results.postureSimulation.functionalLimitations.map((lim, idx) => (
+                        {(results.postureSimulation.functionalLimitations ?? []).map((lim, idx) => (
                           <Badge key={idx} variant="secondary" className="text-[8px] bg-blue-500/5 text-blue-600 border-none">{lim}</Badge>
                         ))}
-                        {results.postureSimulation.functionalLimitations.length === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
+                        {(results.postureSimulation.functionalLimitations?.length ?? 0) === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
                       </div>
                     </div>
 
                     <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
                       <p className="text-[9px] text-muted-foreground uppercase font-bold mb-1">Posture Models</p>
                       <div className="grid grid-cols-1 gap-1">
-                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Standing:</span> <span>{results.postureSimulation.postureModels.standing}</span></div>
-                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Sitting:</span> <span>{results.postureSimulation.postureModels.sitting}</span></div>
+                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Standing:</span> <span>{results.postureSimulation.postureModels?.standing}</span></div>
+                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Sitting:</span> <span>{results.postureSimulation.postureModels?.sitting}</span></div>
                       </div>
                     </div>
                   </CardContent>
@@ -1092,33 +1092,33 @@ export default function AIAnalysis() {
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
                       <div>
-                        <p className="text-2xl font-bold text-primary">{results.bloodFlowAnalysis.spinalCordPerfusion.flowRate}</p>
-                        <p className="text-[8px] text-muted-foreground uppercase font-bold">ML/MIN PERFUSION ({results.bloodFlowAnalysis.spinalCordPerfusion.level})</p>
+                        <p className="text-2xl font-bold text-primary">{results.bloodFlowAnalysis.spinalCordPerfusion?.flowRate}</p>
+                        <p className="text-[8px] text-muted-foreground uppercase font-bold">ML/MIN PERFUSION ({results.bloodFlowAnalysis.spinalCordPerfusion?.level})</p>
                       </div>
-                      <Badge variant="outline" className="text-[9px] uppercase">{results.bloodFlowAnalysis.spinalCordPerfusion.adequacy}</Badge>
+                      <Badge variant="outline" className="text-[9px] uppercase">{results.bloodFlowAnalysis.spinalCordPerfusion?.adequacy}</Badge>
                     </div>
 
                     <div className="space-y-2">
                       <p className="text-[9px] text-muted-foreground uppercase font-bold">Segmental Oxygenation</p>
                       <div className="grid grid-cols-5 gap-1">
-                        {results.bloodFlowAnalysis.nerveRootOxygenation.slice(0, 5).map((n, i) => (
+                        {(results.bloodFlowAnalysis.nerveRootOxygenation ?? []).slice(0, 5).map((n, i) => (
                           <div key={i} className="flex flex-col items-center">
                             <div className={`w-full h-1 rounded-full mb-1 ${n.oxygenation > 85 ? 'bg-emerald-500' : n.oxygenation > 70 ? 'bg-amber-500' : 'bg-rose-500'}`} />
                             <span className="text-[8px] font-mono text-muted-foreground font-bold">{n.vertebralLevel}</span>
                             <span className="text-[8px] font-mono">{n.oxygenation}%</span>
                           </div>
                         ))}
-                        {results.bloodFlowAnalysis.nerveRootOxygenation.length === 0 && (
+                        {(results.bloodFlowAnalysis.nerveRootOxygenation?.length ?? 0) === 0 && (
                           <div className="col-span-5 text-[10px] text-muted-foreground italic text-center p-2">Standard vascular profile maintained</div>
                         )}
                       </div>
                     </div>
 
-                    {results.bloodFlowAnalysis.vascularCompromise.detected && (
+                    {results.bloodFlowAnalysis.vascularCompromise?.detected && (
                       <div className="p-2 rounded-lg bg-rose-500/5 border border-rose-500/20 flex items-center gap-2">
                         <AlertCircle className="h-3 w-3 text-rose-500" />
                         <span className="text-[9px] text-rose-600 font-bold uppercase truncate">
-                          Compromise: {results.bloodFlowAnalysis.vascularCompromise.location.join(', ')}
+                          Compromise: {results.bloodFlowAnalysis.vascularCompromise?.location.join(', ')}
                         </span>
                       </div>
                     )}
