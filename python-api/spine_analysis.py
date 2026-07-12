@@ -19,6 +19,8 @@ from PIL import Image
 from scipy import ndimage
 from scipy.ndimage import label, find_objects
 
+from ml_pipeline import run_ml_inference
+
 try:
     import nibabel as nib
     has_nibabel = True
@@ -588,117 +590,31 @@ def analyze_spine_image(input_path, output_dir):
                 "confidence": 0,
                 "model_version": "ResNet-50 v2.1"
             }
+            
+        # 1. RUN TRUE DEEP LEARNING INFERENCE
+        # This calls the PyTorch ResNet-50 pipeline on the raw image
+        raw_ml_results, heatmap_b64, top_class = run_ml_inference(input_path)
         
-        # 1. Analyze Metrics
-        discs_metrics = analyze_disc_metrics(vertebrae_resized, image_array)
-        
-        # 2. Run Modular Disease Detection
-        herniation_results = detect_herniation(discs_metrics, salt)
-        stenosis_results = detect_stenosis(discs_metrics, salt)
-        ddd_results = detect_degenerative_disc_disease(discs_metrics, salt)
-        
-        curvature_resized = detect_spinal_curvature(vertebrae_resized, image_array, salt=salt)
-        fracture_result = detect_vertebral_fracture(vertebrae_resized, image_array, salt=salt)
-        spondylolisthesis_result = detect_spondylolisthesis(vertebrae_resized, salt=salt)
-        
-        # Comprehensive checked conditions list
+        # 2. Format Findings for the UI
         checked_conditions = []
         findings = []
         
-        # 1. Herniation (Use top finding)
-        if herniation_results:
-            top_h = herniation_results[0]
-            checked_conditions.append(top_h)
-            if top_h['severity'] != 'normal':
-                # Apply inverse scale to measurements for reporting
-                measurements = cast(Dict[str, Any], top_h.get('measurements', {}))
-                measurements['disc_height_mm'] = float(round(float(measurements.get('disc_height_mm', 0)) * inv_scale, 1))
-                findings.append(top_h)
-        
-        # 2. Stenosis (Use worst level)
-        # Sort by severity then confidence
-        stenosis_results.sort(key=lambda x: (severity_map.get(x['severity'], 0), x['confidence']), reverse=True)
-        if stenosis_results:
-            top_s = stenosis_results[0]
-            checked_conditions.append(top_s)
-            if top_s['severity'] != 'normal':
-                findings.append(top_s)
-        
-        # 3. DDD
-        ddd_results.sort(key=lambda x: (severity_map.get(x['severity'], 0), x['confidence']), reverse=True)
-        if ddd_results:
-            top_d = ddd_results[0]
-            checked_conditions.append(top_d)
-            if top_d['severity'] != 'normal':
-                findings.append(top_d)
-
-        # 4. Scoliosis
-        if curvature_resized['detected']:
-            finding = {
-                "condition": "Scoliosis",
-                "severity": curvature_resized['severity'],
-                "confidence": curvature_resized['confidence'],
-                "location": "Thoracolumbar spine",
-                "measurements": {
-                    "max_deviation_mm": float(round(float(curvature_resized.get('max_deviation_pixels', 0)) * inv_scale, 1)),
-                    "cervical_angle": float(round(float(cast(Dict[str, Any], curvature_resized.get('angles', {})).get('cervical', 0)), 1)),
-                    "thoracic_angle": float(round(float(cast(Dict[str, Any], curvature_resized.get('angles', {})).get('thoracic', 0)), 1)),
-                    "lumbar_angle": float(round(float(cast(Dict[str, Any], curvature_resized.get('angles', {})).get('lumbar', 0)), 1))
-                }
+        for condition_name, result in raw_ml_results.items():
+            formatted = {
+                "condition": condition_name,
+                "severity": result["severity"],
+                "confidence": result["confidence"],
+                "location": "Spinal Region", # ML model predicts globally for now
+                "measurements": {"ai_probability": result["confidence"]}
             }
-            findings.append(finding)
-            checked_conditions.append(finding)
-        else:
-            checked_conditions.append({
-                "condition": "Scoliosis",
-                "severity": "normal",
-                "confidence": float(curvature_resized.get('confidence', 0)),
-                "location": "Spinal Alignment",
-                "measurements": {
-                    "max_deviation_mm": float(round(float(curvature_resized.get('max_deviation_pixels', 0)) * inv_scale, 1)),
-                    "alignment": "Normal"
-                }
-            })
-        
-        # 5. Vertebral Fracture
-        if fracture_result['detected']:
-            finding = {
-                "condition": "Vertebral Fracture",
-                "severity": fracture_result['severity'],
-                "confidence": fracture_result['confidence'],
-                "location": ", ".join(cast(List[str], fracture_result.get('affected_levels', []))),
-                "measurements": {"fracture_count": len(cast(List[Any], fracture_result.get('affected_levels', [])))}
-            }
-            findings.append(finding)
-            checked_conditions.append(finding)
-        else:
-            checked_conditions.append({
-                "condition": "Vertebral Fracture",
-                "severity": "normal",
-                "confidence": fracture_result['confidence'],
-                "location": "All Vertebrae",
-                "measurements": {"structural_integrity": "Intact"}
-            })
-        
-        # 6. Spondylolisthesis
-        if spondylolisthesis_result['detected']:
-            finding = {
-                "condition": "Spondylolisthesis",
-                "severity": spondylolisthesis_result['severity'],
-                "confidence": spondylolisthesis_result['confidence'],
-                "location": spondylolisthesis_result['affected_level'],
-                "measurements": {"slippage_mm": float(round(float(spondylolisthesis_result.get('slippage_mm', 0)) * inv_scale, 1))}
-            }
-            findings.append(finding)
-            checked_conditions.append(finding)
-        else:
-            checked_conditions.append({
-                "condition": "Spondylolisthesis",
-                "severity": "normal",
-                "confidence": spondylolisthesis_result['confidence'],
-                "location": "Vertebral Alignment",
-                "measurements": {"max_slippage_mm": float(round(float(spondylolisthesis_result.get('slippage_mm', 0)) * inv_scale, 1))}
-            })
+            # Only attach the heatmap to the top predicted condition
+            if condition_name == top_class and heatmap_b64:
+                formatted["heatmap_b64"] = f"data:image/png;base64,{heatmap_b64}"
+                
+            checked_conditions.append(formatted)
+            
+            if result["severity"] != "normal":
+                findings.append(formatted)
         
         # Consolidation Logic: Select Primary Finding
         primary_finding = None
@@ -707,13 +623,11 @@ def analyze_spine_image(input_path, output_dir):
             primary_finding = findings[0]
         
         if not primary_finding:
-            summary = "No significant abnormalities detected in spinal imaging. All checked conditions within normal limits."
+            summary = "No significant abnormalities detected by ResNet-50. All checked conditions within normal limits."
         else:
-            summary = f"ResNet-50 detected {primary_finding['condition']} at {primary_finding['location']} with {primary_finding['confidence']}% confidence. "
+            summary = f"PyTorch ResNet-50 detected {primary_finding['condition']} with {primary_finding['confidence']}% confidence. "
             if len(findings) > 1:
-                summary += f"Additional {len(findings)-1} findings noted. "
-            normal_count = len([c for c in checked_conditions if c['severity'] == 'normal'])
-            summary += f"{normal_count} conditions checked and cleared."
+                summary += f"Additional {len(findings)-1} findings noted."
         
         landmarks: List[Dict[str, Any]] = []
         for v in vertebrae_resized:

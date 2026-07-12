@@ -3,41 +3,90 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Patient {
-  id        String   @id @default(uuid())
-  patientId String
-  name      String
-  age       Int?
-  createdAt DateTime @default(now())
-  scans     Scan[]
+  id              String   @id @default(uuid())
+  patientId       String   @unique
+  name            String
+  age             Int?
+  gender          String?
+  contactNumber   String?
+  medicalHistory  String?
+  symptoms        String?
+  createdAt       DateTime @default(now())
+  
+  scans           Scan[]
+  appointments    Appointment[]
+  doctorNotes     DoctorNote[]
+  medications     Medication[]
 
   @@map("patients")
+}
+
+model Appointment {
+  id          String   @id @default(uuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  date        DateTime
+  type        String
+  status      String   @default("Scheduled")
+  notes       String?
+
+  @@index([patientId])
+  @@map("appointments")
+}
+
+model DoctorNote {
+  id          String   @id @default(uuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  note        String
+  createdAt   DateTime @default(now())
+
+  @@index([patientId])
+  @@map("doctor_notes")
+}
+
+model Medication {
+  id          String   @id @default(uuid())
+  patientId   String
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  name        String
+  dosage      String
+  frequency   String
+  startDate   DateTime?
+  endDate     DateTime?
+  active      Boolean  @default(true)
+
+  @@index([patientId])
+  @@map("medications")
 }
 
 model Scan {
   id            String     @id @default(uuid())
   patientCaseId String
-  patient       Patient    @relation(fields: [patientCaseId], references: [id])
+  patient       Patient    @relation(fields: [patientCaseId], references: [id], onDelete: Cascade)
   imageUrl      String
   imageType     String
   metadata      Json?      
   uploadedAt    DateTime   @default(now())
   analyses      Analysis[]
 
+  @@index([patientCaseId])
   @@map("scans")
 }
 
 model Analysis {
   id         String   @id @default(uuid())
   scanId     String
-  scan       Scan     @relation(fields: [scanId], references: [id])
+  scan       Scan     @relation(fields: [scanId], references: [id], onDelete: Cascade)
   results    Json     
   analyzedAt DateTime @default(now())
 
+  @@index([scanId])
   @@map("analyses")
 }
 

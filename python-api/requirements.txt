@@ -1,4 +1,10 @@
-flask==3.0.3
-numpy==1.26.4
-opencv-python-headless==4.10.0.84
-pillow==10.4.0
+fastapi
+uvicorn[standard]
+python-multipart
+numpy
+opencv-python-headless
+pillow
+scipy
+gunicorn
+torch
+torchvision

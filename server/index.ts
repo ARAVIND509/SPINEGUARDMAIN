@@ -8,7 +8,23 @@ import { setupWebSocket } from "./websocket-handler";
 import { storage } from "./storage";
 import { hashPassword } from "./auth";
 
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import { logger } from "./logger";
+
 const app = express();
+
+// Security Headers
+app.use(helmet());
+
+// Rate Limiting (Basic protection against brute force)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api/", apiLimiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -41,7 +57,7 @@ app.use((req, res, next) => {
         logLine = logLine.slice(0, 79) + "…";
       }
 
-      log(logLine);
+      logger.info(logLine);
     }
   });
 
@@ -59,7 +75,7 @@ app.use((req, res, next) => {
     const admin = await storage.getUserByUsername("admin");
 
     if (!admin) {
-      log("Seeding default admin user...");
+      logger.info("Seeding default admin user...");
 
       const hashedPassword = await hashPassword("password123");
 
@@ -68,10 +84,10 @@ app.use((req, res, next) => {
         password: hashedPassword
       });
 
-      log("Admin created (admin / password123)");
+      logger.info("Admin created (admin / password123)");
     }
   } catch (err) {
-    console.error("Failed to seed admin:", err);
+    logger.error("Failed to seed admin:", err);
   }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -83,7 +99,7 @@ app.use((req, res, next) => {
       res.status(status).json({ message });
     }
 
-    console.error(err);
+    logger.error(`Express error handler: ${message}`, err);
   });
 
   // DEVELOPMENT MODE → use Vite
@@ -114,7 +130,7 @@ app.get("*", (_req, res) => {
       reusePort: process.env.NODE_ENV !== "development"
     },
     () => {
-      log(`Server running on ${host}:${port}`);
+      logger.info(`Server running on ${host}:${port}`);
     }
   );
 

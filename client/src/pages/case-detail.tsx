@@ -10,7 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Patient, Scan } from "@shared/schema";
+import type { Patient, Scan, Appointment, DoctorNote, Medication } from "@shared/schema";
+import { Calendar, FileText, Pill, Plus } from "lucide-react";
 
 export default function CaseDetail() {
   const [, params] = useRoute("/case/:id");
@@ -30,6 +31,22 @@ export default function CaseDetail() {
   const { data: scans = [] } = useQuery<Scan[]>({
     queryKey: ["/api/scans", caseId],
     enabled: !!caseId,
+  });
+
+  // Clinical Profile Data
+  const { data: appointments = [] } = useQuery<Appointment[]>({
+    queryKey: [`/api/patients/${patient?.id}/appointments`],
+    enabled: !!patient?.id,
+  });
+
+  const { data: notes = [] } = useQuery<DoctorNote[]>({
+    queryKey: [`/api/patients/${patient?.id}/notes`],
+    enabled: !!patient?.id,
+  });
+
+  const { data: medications = [] } = useQuery<Medication[]>({
+    queryKey: [`/api/patients/${patient?.id}/medications`],
+    enabled: !!patient?.id,
   });
 
 
@@ -117,8 +134,112 @@ export default function CaseDetail() {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="w-full max-w-4xl space-y-6">
+        <div className="flex-1 flex flex-col p-8 overflow-y-auto">
+          <Tabs defaultValue="scans" className="w-full max-w-6xl mx-auto">
+            <TabsList className="mb-6 grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="scans">Radiology Scans</TabsTrigger>
+              <TabsTrigger value="clinical">Clinical Profile</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="clinical" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Patient Summary Card */}
+                <Card className="col-span-1 md:col-span-2">
+                  <CardHeader>
+                    <CardTitle>Medical History & Symptoms</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-semibold text-sm mb-1">Medical History</h4>
+                        <p className="text-sm text-muted-foreground">{patient.medicalHistory || 'No history recorded.'}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm mb-1">Current Symptoms</h4>
+                        <p className="text-sm text-muted-foreground">{patient.symptoms || 'No symptoms recorded.'}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Medications */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2"><Pill className="h-5 w-5"/> Medications</CardTitle>
+                    <Button variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4"/></Button>
+                  </CardHeader>
+                  <CardContent>
+                    {medications.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No active medications.</p>
+                    ) : (
+                      <div className="space-y-3 mt-4">
+                        {medications.map(med => (
+                          <div key={med.id} className="flex justify-between items-center border-b pb-2">
+                            <div>
+                              <p className="font-medium">{med.name}</p>
+                              <p className="text-xs text-muted-foreground">{med.dosage} • {med.frequency}</p>
+                            </div>
+                            <Badge variant={med.active ? "default" : "secondary"}>{med.active ? "Active" : "Inactive"}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Appointments */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2"><Calendar className="h-5 w-5"/> Appointments</CardTitle>
+                    <Button variant="outline" size="icon" className="h-8 w-8"><Plus className="h-4 w-4"/></Button>
+                  </CardHeader>
+                  <CardContent>
+                    {appointments.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No scheduled appointments.</p>
+                    ) : (
+                      <div className="space-y-3 mt-4">
+                        {appointments.map(apt => (
+                          <div key={apt.id} className="flex justify-between items-center border-b pb-2">
+                            <div>
+                              <p className="font-medium">{new Date(apt.date).toLocaleDateString()} - {new Date(apt.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                              <p className="text-xs text-muted-foreground">{apt.type}</p>
+                            </div>
+                            <Badge variant="outline">{apt.status}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Doctor Notes */}
+                <Card className="col-span-1 md:col-span-2">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2"><FileText className="h-5 w-5"/> Clinical Notes</CardTitle>
+                    <Button variant="outline" size="sm"><Plus className="h-4 w-4 mr-1"/> Add Note</Button>
+                  </CardHeader>
+                  <CardContent>
+                    {notes.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No clinical notes available.</p>
+                    ) : (
+                      <div className="space-y-4 mt-4">
+                        {notes.map(note => (
+                          <div key={note.id} className="bg-muted/50 p-4 rounded-md">
+                            <p className="text-xs text-muted-foreground mb-2">{new Date(note.createdAt).toLocaleString()}</p>
+                            <p className="text-sm whitespace-pre-wrap">{note.note}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+              </div>
+            </TabsContent>
+
+            <TabsContent value="scans">
+              <div className="w-full space-y-6">
             {scans.length > 0 && (
               <Card>
                 <CardHeader>
@@ -223,6 +344,8 @@ export default function CaseDetail() {
               </Card>
             )}
           </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

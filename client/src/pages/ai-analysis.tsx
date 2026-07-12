@@ -183,19 +183,29 @@ export default function AIAnalysis() {
     }
   }, [results, activeHeatmapIdx]);
 
-  const handleDownloadPDF = () => {
+  const handleDownloadReport = async () => {
     if (!results || !patient || !scan) return;
-    downloadAnalysisPDF(results, {
+    
+    // In a real app, this would come from the logged-in doctor's profile
+    const clinicInfo = {
+      hospitalName: "SpineGuard Advanced Imaging Center",
+      doctorName: "Dr. Sarah Chen, MD",
+      licenseNumber: "MED-849201-CA"
+    };
+
+    await downloadAnalysisPDF(results, {
       name: patient.name,
-      age: patient.age ?? undefined,
-      medicalRecordNumber: patient.patientId,
+      age: patient.age || undefined,
+      gender: patient.gender || undefined,
+      medicalRecordNumber: patient.patientId
     }, {
       imageType: scan.imageType,
-      uploadDate: new Date(scan.uploadedAt).toLocaleString(),
-    });
+      uploadDate: scan.uploadedAt.toString()
+    }, undefined, clinicInfo);
+    
     toast({
-      title: "Generating Report",
-      description: "Diagnostic PDF is being compiled.",
+      title: "Report Downloaded",
+      description: "The clinical analysis report has been saved to your device.",
     });
   };
 
@@ -340,7 +350,7 @@ export default function AIAnalysis() {
           <div className="flex gap-3">
             {results && (
               <Button
-                onClick={handleDownloadPDF}
+                onClick={handleDownloadReport}
                 className="h-12 px-6 rounded-xl bg-primary text-primary-foreground shadow-lg transition-all"
               >
                 <Download className="h-4 w-4 mr-2" />

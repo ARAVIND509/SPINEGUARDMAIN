@@ -5,5 +5,5 @@ export const prisma = new PrismaClient();
 
 // Test connection
 prisma.$connect()
-  .then(() => console.log('Successfully connected to SQLite database via Prisma'))
+  .then(() => console.log('Successfully connected to PostgreSQL database via Prisma'))
   .catch((err: any) => console.error('Failed to connect to database:', err));

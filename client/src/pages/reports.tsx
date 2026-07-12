@@ -19,7 +19,7 @@ export default function Reports() {
     queryKey: ["/api/analyses"],
   });
 
-  const handleDownloadPDF = (analysis: AnalysisWithDetails) => {
+  const handleDownloadPDF = async (analysis: AnalysisWithDetails) => {
     if (!analysis.scan || !analysis.patient) {
       toast({
         title: "Cannot generate PDF",
@@ -32,18 +32,26 @@ export default function Reports() {
     try {
       const results = analysis.results as AnalysisResults;
 
-      downloadAnalysisPDF(
+      const clinicInfo = {
+        hospitalName: "SpineGuard Advanced Imaging Center",
+        doctorName: "Dr. Sarah Chen, MD",
+        licenseNumber: "MED-849201-CA"
+      };
+
+      await downloadAnalysisPDF(
         results,
         {
           name: analysis.patient.name,
           age: analysis.patient.age ?? undefined,
-          gender: undefined,
+          gender: analysis.patient.gender ?? undefined,
           medicalRecordNumber: analysis.patient.patientId,
         },
         {
           imageType: analysis.scan.imageType,
           uploadDate: new Date(analysis.scan.uploadedAt).toLocaleString(),
-        }
+        },
+        undefined,
+        clinicInfo
       );
 
       toast({

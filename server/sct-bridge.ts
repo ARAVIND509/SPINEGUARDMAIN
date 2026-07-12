@@ -28,71 +28,25 @@ export async function analyzeWithSCT(
 ): Promise<AnalysisResults> {
   console.log(`Analyzing ${imageType} scan with Python spine analysis`);
 
-  // Create a temporary directory for the analysis
-  const tempDir = join(process.cwd(), 'temp', Date.now().toString());
-  await fs.mkdir(tempDir, { recursive: true });
-
   try {
-    // Save the image buffer to a temporary file
-    const imagePath = join(tempDir, 'input_image.png');
-    await fs.writeFile(imagePath, imageBuffer);
+    const blob = new Blob([imageBuffer], { type: 'image/png' });
+    const formData = new FormData();
+    formData.append('image', blob, 'image.png');
 
-    // Call the Python script
-    const pythonScript = join(__dirname, 'spine_analysis.py');
-    const outputDir = join(tempDir, 'output');
+    const apiUrl = process.env.PYTHON_API_URL || 'http://localhost:8000';
+    console.log(`Sending image to Python API at ${apiUrl}/analyze`);
 
-    console.log(`Running Python analysis: ${pythonScript}`);
-    console.log(`Input: ${imagePath}, Output: ${outputDir}`);
-
-    const pythonProcess = spawn('python', [
-      pythonScript,
-      '--input', imagePath,
-      '--output', outputDir,
-      '--format', 'png'
-    ]);
-
-    // Wait for the Python process to complete
-    const result = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
-      let stdout = '';
-      let stderr = '';
-
-      pythonProcess.stdout.on('data', (data) => {
-        stdout += data.toString();
-      });
-
-      pythonProcess.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
-      pythonProcess.on('close', (code) => {
-        if (code === 0) {
-          resolve({ stdout, stderr });
-        } else {
-          reject(new Error(`Python script exited with code ${code}: ${stderr}`));
-        }
-      });
-
-      // Add timeout (60 seconds)
-      setTimeout(() => {
-        pythonProcess.kill();
-        reject(new Error('Python analysis timed out after 60 seconds'));
-      }, 60000);
+    const response = await fetch(`${apiUrl}/analyze`, {
+      method: 'POST',
+      body: formData,
     });
 
-    console.log('Python analysis completed');
-    console.log('stdout:', result.stdout.substring(0, 200));
-    if (result.stderr) {
-      console.warn('stderr:', result.stderr);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Python API error (${response.status}): ${errorText}`);
     }
 
-    // Parse the JSON output from the Python script
-    let sctResults;
-    try {
-      sctResults = JSON.parse(result.stdout);
-    } catch (parseError) {
-      console.error('Failed to parse Python output:', result.stdout);
-      throw new Error(`Failed to parse Python script output: ${parseError}`);
-    }
+    const sctResults = await response.json();
 
     // If there was an error in the analysis, throw it
     if (sctResults.error) {
@@ -127,13 +81,9 @@ export async function analyzeWithSCT(
     }
 
     return results;
-  } finally {
-    // Clean up temporary files
-    try {
-      await fs.rm(tempDir, { recursive: true, force: true });
-    } catch (cleanupError) {
-      console.warn('Failed to clean up temporary files:', cleanupError);
-    }
+  } catch (error) {
+    console.error('Error during Python analysis:', error);
+    throw error;
   }
 }
 

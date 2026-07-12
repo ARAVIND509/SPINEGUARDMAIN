@@ -5,9 +5,14 @@ import { storage } from "./storage";
 import { analyzeWithMedicalModel } from "./ml-analysis";
 import { analyzeWithSCT } from "./sct-bridge";
 import { insertPatientSchema, insertScanSchema, insertAnalysisSchema } from "@shared/schema";
-import { parseDICOM } from "./dicom-parser";
 import { updateAnalysisProgress } from "./websocket-handler";
+import { parseDICOM } from "./dicom-parser";
 import { ensureAuthenticated } from "./auth";
+import { 
+  insertAppointmentSchema, 
+  insertDoctorNoteSchema, 
+  insertMedicationSchema 
+} from "@shared/schema";
 
 // Configure multer for memory storage
 const upload = multer({
@@ -71,6 +76,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertPatientSchema.parse(req.body);
       const patient = await storage.createPatient(validatedData);
       res.status(201).json(patient);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Clinical Features (Phase 4)
+  
+  // Appointments
+  app.get("/api/patients/:id/appointments", async (req, res) => {
+    try {
+      const appointments = await storage.getPatientAppointments(req.params.id);
+      res.json(appointments);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/patients/:id/appointments", async (req, res) => {
+    try {
+      const payload = { ...req.body, patientId: req.params.id };
+      const validatedData = insertAppointmentSchema.parse(payload);
+      const appointment = await storage.createAppointment(validatedData);
+      res.status(201).json(appointment);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Doctor Notes
+  app.get("/api/patients/:id/notes", async (req, res) => {
+    try {
+      const notes = await storage.getPatientNotes(req.params.id);
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/patients/:id/notes", async (req, res) => {
+    try {
+      const payload = { ...req.body, patientId: req.params.id };
+      const validatedData = insertDoctorNoteSchema.parse(payload);
+      const note = await storage.createDoctorNote(validatedData);
+      res.status(201).json(note);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  });
+
+  // Medications
+  app.get("/api/patients/:id/medications", async (req, res) => {
+    try {
+      const medications = await storage.getPatientMedications(req.params.id);
+      res.json(medications);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/patients/:id/medications", async (req, res) => {
+    try {
+      const payload = { ...req.body, patientId: req.params.id };
+      const validatedData = insertMedicationSchema.parse(payload);
+      const medication = await storage.createMedication(validatedData);
+      res.status(201).json(medication);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }

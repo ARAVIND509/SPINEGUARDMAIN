@@ -1,0 +1,877 @@
+<USER_REQUEST>
+PROMPT FOR ANTIGRAVITY
+ROLE
+
+You are a team of Senior AI Engineers, Medical Imaging Researchers, Software Architects, Full Stack Developers, DevOps Engineers, Security Engineers, QA Engineers, and UI/UX Designers.
+
+Your goal is to convert my academic project into a production-grade AI medical software.
+
+Do not stop after writing code.
+
+You must continuously analyze, improve, fix, test, optimize, and validate everything until the project runs successfully on my local machine.
+
+PROJECT NAME
+
+SpineGuard
+
+AI-Powered Spinal Disorder Detection and Clinical Decision Support System
+CURRENT PROJECT
+
+This is currently a college final year project.
+
+Current features include
+
+MRI Upload
+Disc Herniation Detection
+CNN-based Classification
+Grad-CAM Visualization
+PDF Report Generation
+Clinic Mode
+Patient Details
+Offline Prediction
+
+Technology
+
+Backend
+
+Python
+FastAPI
+
+AI
+
+TensorFlow / PyTorch
+
+Frontend
+
+Next.js
+
+Desktop Version
+
+PyQt6
+
+Database
+
+SQLite
+GOAL
+
+Transform this into a real-world production-ready medical AI software.
+
+The final software should look like something that hospitals, clinics, radiologists, physiotherapists, and diagnostic centers can actually use.
+
+IMPORTANT
+
+Do NOT rebuild everything from scratch.
+
+Instead,
+
+Analyze every file.
+
+Understand current architecture.
+
+Find weaknesses.
+
+Improve existing implementation.
+
+Only rewrite modules where necessary.
+
+Maintain compatibility.
+
+PHASE 1
+Complete Project Audit
+
+Analyze
+
+Folder Structure
+
+Architecture
+
+Frontend
+
+Backend
+
+AI Models
+
+Database
+
+Desktop Application
+
+API Design
+
+Authentication
+
+Security
+
+Logging
+
+Configuration
+
+Environment Variables
+
+Documentation
+
+Dependencies
+
+Docker
+
+Performance
+
+Memory Usage
+
+Model Size
+
+UI
+
+UX
+
+Code Quality
+
+Scalability
+
+Maintainability
+
+Testing
+
+Deployment
+
+Generate
+
+Production Readiness Report
+
+Code Smells
+
+Performance Report
+
+Security Report
+
+Missing Features
+
+Medical Software Best Practices
+
+Risk Analysis
+
+Technical Debt Report
+
+Priority Score
+
+PHASE 2
+AI Model Upgrade
+
+Review entire AI pipeline.
+
+Check
+
+Dataset
+
+Annotations
+
+Image Resolution
+
+Preprocessing
+
+Normalization
+
+Augmentation
+
+Class Balance
+
+Model Architecture
+
+Loss Function
+
+Optimizer
+
+Metrics
+
+Training Pipeline
+
+Validation
+
+Inference
+
+Model Compression
+
+GPU Support
+
+CPU Support
+
+Mixed Precision
+
+Batch Processing
+
+Memory Usage
+
+Model Size
+
+Inference Time
+
+Upgrade model where required.
+
+Possible improvements
+
+EfficientNet
+
+ConvNeXt
+
+ResNet
+
+DenseNet
+
+Vision Transformer
+
+MobileNet
+
+Ensemble Models
+
+Knowledge Distillation
+
+ONNX
+
+TensorRT
+
+Quantization
+
+Pruning
+
+Early Stopping
+
+Learning Rate Scheduler
+
+Automatic Checkpoint Saving
+
+Best Model Selection
+
+Confidence Thresholding
+
+Probability Calibration
+
+Uncertainty Estimation
+
+PHASE 3
+Medical Imaging Improvements
+
+Improve
+
+MRI preprocessing
+
+Noise Removal
+
+Contrast Enhancement
+
+Image Registration
+
+Skull Removal (if needed)
+
+ROI Detection
+
+Automatic Spine Localization
+
+Vertebra Detection
+
+Disc Segmentation
+
+Heatmap Quality
+
+GradCAM++
+
+ScoreCAM
+
+EigenCAM
+
+Overlay Transparency
+
+Multiple Slice Prediction
+
+3D Volume Support
+
+DICOM Support
+
+PNG Support
+
+JPEG Support
+
+NIfTI Support
+
+Automatic Metadata Extraction
+
+PHASE 4
+Clinical Features
+
+Upgrade software with
+
+Patient History
+
+Symptoms
+
+Previous Reports
+
+Previous MRI Comparison
+
+Disease Progression
+
+Doctor Notes
+
+Recommendations
+
+Severity Score
+
+Risk Score
+
+Treatment Suggestions
+
+Exercise Suggestions
+
+Physiotherapy Suggestions
+
+Medication Reminder
+
+Appointment Scheduler
+
+Referral Generation
+
+Report History
+
+Timeline
+
+Patient Dashboard
+
+PHASE 5
+Report Generation
+
+Upgrade reports.
+
+Include
+
+Hospital Logo
+
+Doctor Information
+
+Patient Information
+
+Scan Information
+
+Prediction
+
+Confidence
+
+Heatmaps
+
+Probability Graphs
+
+Severity Score
+
+Clinical Findings
+
+Recommendations
+
+Disclaimer
+
+Digital Signature
+
+QR Code
+
+Timestamp
+
+PDF Export
+
+Print Ready
+
+Multi-page Reports
+
+Professional Design
+
+PHASE 6
+Backend Upgrade
+
+Improve
+
+FastAPI
+
+Folder Structure
+
+Dependency Injection
+
+Middleware
+
+Logging
+
+Validation
+
+Pydantic Models
+
+Caching
+
+Async Processing
+
+Exception Handling
+
+Configuration Management
+
+Versioning
+
+Health Checks
+
+Monitoring
+
+Swagger Documentation
+
+OpenAPI
+
+Rate Limiting
+
+JWT Authentication
+
+RBAC
+
+Audit Logs
+
+Background Tasks
+
+PHASE 7
+Database Upgrade
+
+Review
+
+SQLite
+
+If necessary
+
+Upgrade to PostgreSQL
+
+Create
+
+Normalized Schema
+
+Indexes
+
+Constraints
+
+Relationships
+
+Migration Scripts
+
+Backup Strategy
+
+Recovery Strategy
+
+Encryption
+
+Patient Records
+
+Prediction History
+
+Audit Logs
+
+Doctor Accounts
+
+Clinic Accounts
+
+PHASE 8
+Desktop Application
+
+Review PyQt.
+
+Upgrade
+
+Modern UI
+
+Dark Mode
+
+Light Mode
+
+Responsive Layout
+
+Animations
+
+Loading Screens
+
+Progress Indicators
+
+Recent Patients
+
+History
+
+Search
+
+Export
+
+Settings
+
+Offline Mode
+
+Auto Update Checker
+
+Crash Recovery
+
+PHASE 9
+Frontend Upgrade
+
+Review entire frontend.
+
+Improve
+
+Dashboard
+
+Navigation
+
+Accessibility
+
+Theme
+
+Charts
+
+Patient Cards
+
+Analytics
+
+Modern Design
+
+Responsive Design
+
+Error Pages
+
+Notifications
+
+Toast Messages
+
+Upload Experience
+
+Progress Bars
+
+Lazy Loading
+
+Image Viewer
+
+Zoom
+
+Fullscreen
+
+Before After Comparison
+
+PHASE 10
+Security
+
+Review
+
+Authentication
+
+Authorization
+
+Password Storage
+
+JWT
+
+API Security
+
+Input Validation
+
+SQL Injection
+
+XSS
+
+CSRF
+
+Secrets
+
+Environment Variables
+
+Logging
+
+Medical Privacy
+
+Encryption
+
+File Upload Validation
+
+Audit Logging
+
+Session Management
+
+PHASE 11
+Performance Optimization
+
+Benchmark
+
+API Speed
+
+Model Speed
+
+Memory Usage
+
+GPU Usage
+
+CPU Usage
+
+Startup Time
+
+Inference Time
+
+Database Queries
+
+Caching
+
+Image Processing
+
+Large File Handling
+
+Parallel Processing
+
+Multithreading
+
+Async Processing
+
+PHASE 12
+DevOps
+
+Create
+
+Dockerfile
+
+docker-compose
+
+Environment Config
+
+Production Config
+
+Development Config
+
+CI/CD
+
+GitHub Actions
+
+Versioning
+
+Release Pipeline
+
+Backup Scripts
+
+Health Monitoring
+
+Logging
+
+PHASE 13
+Testing
+
+Automatically create
+
+Unit Tests
+
+Integration Tests
+
+API Tests
+
+Model Tests
+
+Frontend Tests
+
+Desktop Tests
+
+Security Tests
+
+Performance Tests
+
+Stress Tests
+
+Regression Tests
+
+Generate test coverage reports.
+
+PHASE 14
+Documentation
+
+Generate
+
+README
+
+Architecture Diagram
+
+API Documentation
+
+Database Diagram
+
+Deployment Guide
+
+Installation Guide
+
+Developer Guide
+
+User Guide
+
+Admin Guide
+
+Troubleshooting Guide
+
+PHASE 15
+Production Readiness
+
+Check
+
+Code Quality
+
+Performance
+
+Security
+
+Accessibility
+
+Maintainability
+
+Scalability
+
+Reliability
+
+Availability
+
+Recoverability
+
+Logging
+
+Monitoring
+
+Deployment
+
+Backup
+
+Version Control
+
+Testing
+
+Documentation
+
+Score everything.
+
+Give
+
+Production Score
+
+Hospital Readiness Score
+
+Clinical Readiness Score
+
+Deployment Readiness Score
+
+Security Score
+
+AI Quality Score
+
+UI Score
+
+Architecture Score
+
+Overall Score
+
+PHASE 16
+Local Execution
+
+Do NOT assume code works.
+
+Run the complete application locally.
+
+Start
+
+Frontend
+
+Backend
+
+Desktop App
+
+Database
+
+AI Model
+
+APIs
+
+Run every feature.
+
+Test
+
+MRI Upload
+
+Prediction
+
+GradCAM
+
+PDF Report
+
+Clinic Mode
+
+History
+
+Authentication
+
+Dashboard
+
+Settings
+
+If ANY error occurs
+
+Find root cause.
+
+Fix it.
+
+Run again.
+
+Repeat until no errors remain.
+
+Do not stop after fixing one issue.
+
+Continue testing until every workflow succeeds.
+
+PHASE 17
+Continuous Improvement Loop
+
+Repeat this cycle until the project reaches production quality:
+
+Analyze
+Detect bugs
+Fix bugs
+Refactor code
+Improve architecture
+Optimize performance
+Improve UI/UX
+Improve AI accuracy
+Improve security
+Run tests
+Run application
+Validate outputs
+Re-check for regressions
+Repeat until stable
+
+Never stop after a single pass.
+
+FINAL DELIVERABLES
+
+Provide:
+
+Complete upgraded production-ready codebase
+Improved folder structure
+Refactored architecture
+Optimized AI pipeline
+Modern UI/UX
+Production-ready FastAPI backend
+Enhanced PyQt desktop application
+Improved CNN model with explainability
+Professional PDF reports
+Database migrations
+Docker setup
+GitHub Actions CI/CD
+Complete documentation
+Automated tests
+Security improvements
+Performance optimization report
+Deployment guide
+Local run verification
+Final production readiness report with scores and remaining recommendations
+SUCCESS CRITERIA
+
+The task is complete only when:
+
+The application runs locally without errors.
+All major features are functional end-to-end.
+The codebase follows production-quality engineering practices.
+Security, performance, and maintainability have been reviewed and improved.
+Documentation and tests are complete.
+The project is suitable as a professional portfolio piece and demonstrates the quality expected of a real-world AI healthcare software system.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-12T19:14:17+05:30.
+</ADDITIONAL_METADATA>

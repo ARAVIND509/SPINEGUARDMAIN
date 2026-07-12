@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  spineguard-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: spineguard
+      POSTGRES_PASSWORD: spineguard_password
+      POSTGRES_DB: spineguard_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  spineguard-ai:
+    build:
+      context: ./python-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+
+  spineguard-web:
+    build:
+      context: .
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PYTHON_API_URL=http://spineguard-ai:8000
+      # NOTE: Prisma schema needs to be updated to 'postgresql' for this to work natively
+      - DATABASE_URL=postgresql://spineguard:spineguard_password@spineguard-db:5432/spineguard_db
+      - SESSION_SECRET=spineguard-production-secret
+    depends_on:
+      - spineguard-db
+      - spineguard-ai
+
+volumes:
+  pgdata:

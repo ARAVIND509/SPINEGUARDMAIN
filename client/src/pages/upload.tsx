@@ -50,16 +50,31 @@ export default function Upload() {
       formData.append("patientCaseId", patientId);
       formData.append("imageType", imageType);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable) {
+            const progress = Math.round((event.loaded * 100) / event.total);
+            setUploadProgress(progress);
+          }
+        });
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            reject(new Error("Upload failed"));
+          }
+        });
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Upload network error"));
+        });
+
+        xhr.open("POST", "/api/upload");
+        xhr.send(formData);
       });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      return await response.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/scans"] });

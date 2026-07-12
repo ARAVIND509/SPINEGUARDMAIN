@@ -2,7 +2,10 @@ import {
   type Patient, type InsertPatient,
   type Scan, type InsertScan,
   type Analysis, type InsertAnalysis,
-  type User, type InsertUser
+  type User, type InsertUser,
+  type Appointment, type InsertAppointment,
+  type DoctorNote, type InsertDoctorNote,
+  type Medication, type InsertMedication
 } from "@shared/schema";
 import { prisma } from "./db";
 import session from "express-session";
@@ -31,6 +34,16 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+
+  // Clinical Operations
+  getPatientAppointments(patientId: string): Promise<Appointment[]>;
+  createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  
+  getPatientNotes(patientId: string): Promise<DoctorNote[]>;
+  createDoctorNote(note: InsertDoctorNote): Promise<DoctorNote>;
+  
+  getPatientMedications(patientId: string): Promise<Medication[]>;
+  createMedication(medication: InsertMedication): Promise<Medication>;
 
   sessionStore: session.Store;
 }
@@ -132,6 +145,46 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     return await (prisma as any).user.create({
       data: insertUser
+    });
+  }
+
+  // Clinical Operations
+  async getPatientAppointments(patientId: string): Promise<Appointment[]> {
+    return await (prisma as any).appointment.findMany({
+      where: { patientId },
+      orderBy: { date: 'asc' }
+    });
+  }
+
+  async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
+    return await (prisma as any).appointment.create({
+      data: insertAppointment
+    });
+  }
+
+  async getPatientNotes(patientId: string): Promise<DoctorNote[]> {
+    return await (prisma as any).doctorNote.findMany({
+      where: { patientId },
+      orderBy: { createdAt: 'desc' }
+    });
+  }
+
+  async createDoctorNote(insertNote: InsertDoctorNote): Promise<DoctorNote> {
+    return await (prisma as any).doctorNote.create({
+      data: insertNote
+    });
+  }
+
+  async getPatientMedications(patientId: string): Promise<Medication[]> {
+    return await (prisma as any).medication.findMany({
+      where: { patientId },
+      orderBy: { name: 'asc' }
+    });
+  }
+
+  async createMedication(insertMedication: InsertMedication): Promise<Medication> {
+    return await (prisma as any).medication.create({
+      data: insertMedication
     });
   }
 
