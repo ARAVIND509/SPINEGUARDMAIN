@@ -615,13 +615,13 @@ export default function AIAnalysis() {
                 )}
 
                 {/* Risk Zones */}
-                {results?.riskZones && results?.riskZones.length > 0 && (
+                {results?.riskZones && (
                   <div className="pt-4">
                     <p className="text-[10px] text-muted-foreground font-bold uppercase mb-2 flex items-center gap-2">
                       <Radar className="h-3 w-3" /> Anatomical Risk Zones
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {results?.riskZones.map((zone, i) => (
+                      {(results?.riskZones || []).map((zone, i) => (
                         <Badge key={i} variant="secondary" className="bg-rose-500/10 text-rose-600 border-none text-[9px]">
                           {zone}
                         </Badge>
@@ -1130,14 +1130,14 @@ export default function AIAnalysis() {
         )}
 
         {/* All Conditions Checked - Full Report Section */}
-        {results && results?.checkedConditions && (
+        {results && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <CheckCircle2 className="h-6 w-6 text-emerald-500" />
               Comprehensive Diagnostic Scan (6+ Conditions Verified)
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {results?.checkedConditions.map((condition, idx) => (
+              {(results?.checkedConditions || results?.findings || []).map((condition, idx) => (
                 <div key={idx} className="glass-card p-4 rounded-2xl border border-white/10 hover:border-primary/30 transition-all">
                   <div className="flex justify-between items-start mb-2">
                     <span className="text-xs font-bold uppercase tracking-wider">{condition.condition}</span>
