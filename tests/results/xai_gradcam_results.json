@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-11-21T21:16:46Z",
+  "target_layer": "base_model.layer4[-1]",
+  "feature_map_dimensions": [
+    1,
+    2048,
+    7,
+    7
+  ],
+  "hooks_status": "PASSED",
+  "spatial_dimension_match": true,
+  "dynamic_range_status": "PASSED",
+  "determinism_max_diff": 0.0,
+  "is_xai_deterministic": true,
+  "edge_case_tests": [
+    {
+      "case": "Black Image (0s)",
+      "status": "PASSED",
+      "top_class": "Spinal Stenosis",
+      "heatmap_generated": true
+    },
+    {
+      "case": "White Image (255s)",
+      "status": "PASSED",
+      "top_class": "Spinal Stenosis",
+      "heatmap_generated": true
+    },
+    {
+      "case": "Random Noise (Uniform)",
+      "status": "PASSED",
+      "top_class": "Spinal Stenosis",
+      "heatmap_generated": true
+    }
+  ]
+}

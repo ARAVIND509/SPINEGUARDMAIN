@@ -17,6 +17,9 @@ class SpineModel(nn.Module):
             self.base_model = models.resnet50(weights=None)
         num_ftrs = self.base_model.fc.in_features
         self.base_model.fc = nn.Linear(num_ftrs, num_classes)
+        # Calibrate classifier head baseline: negative log-odds prior (sigmoid(-2.0) ~ 11.9% normal baseline)
+        nn.init.constant_(self.base_model.fc.bias, -2.0)
+        nn.init.normal_(self.base_model.fc.weight, mean=0.0, std=0.01)
         
         # Hooks for Grad-CAM
         self.gradients = None
@@ -107,8 +110,8 @@ class SpineInferencePipeline:
             
         input_tensor = self.transform(pil_image).unsqueeze(0).to(self.device)
         
-        # Enable gradients for Grad-CAM
-        self.model.train() # Need gradients, so temporarily turn off eval strictly for backward
+        # Ensure eval mode so BatchNorm maintains running population statistics
+        self.model.eval()
         for param in self.model.parameters():
             param.requires_grad = True
             

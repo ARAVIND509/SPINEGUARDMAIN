@@ -42,59 +42,44 @@ export async function generateGradCAMHeatmaps(
     if (!prediction) continue;
 
     try {
-      let heatmapBuffer: Buffer;
-      let isSynthetic = false;
-      let primaryPeak = null;
-      let affectedRegions: any[] = [];
-      let heatmapTensor: tf.Tensor2D | null = null;
-      
-      if (prediction.heatmap_b64) {
-        // Use REAL PyTorch Grad-CAM from the Python AI server!
-        heatmapBuffer = Buffer.from(prediction.heatmap_b64.split(',')[1] || prediction.heatmap_b64, 'base64');
-        isSynthetic = false;
-        
-        // Setup basic regions for UI
-        affectedRegions = [{
-          region: 'AI Primary Focus Area',
-          intensity: 0.9,
-          coordinates: { x: width/2, y: height/2, width: 60, height: 60 }
-        }];
-        primaryPeak = { x: width/2, y: height/2 };
-      } else {
-        // Fallback to Synthetic Gaussian Blob if no real Grad-CAM available
-        heatmapTensor = await generateRealGradCAMMap(
-          imageBuffer, width, height, prediction, activationData, landmarks
-        );
-        heatmapBuffer = await tensorToHeatmapImage(heatmapTensor, prediction.severity);
-        const regionsInfo = extractAffectedRegions(heatmapTensor, prediction, width, height);
-        affectedRegions = regionsInfo.regions;
-        primaryPeak = regionsInfo.primaryPeak;
-        isSynthetic = true;
+      if (!prediction.heatmap_b64) {
+        // CLINICAL SAFETY RULE: Synthetic Grad-CAM fallback is strictly prohibited.
+        // If authentic PyTorch gradient backpropagation is unavailable, do NOT fabricate visual explanations.
+        console.warn(`[Explainable AI] Authentic Grad-CAM activation map unavailable for condition: ${prediction.condition}. Synthetic fallback suppressed for diagnostic integrity.`);
+        continue;
       }
+
+      // Use ONLY authentic PyTorch Grad-CAM from the deep learning pipeline
+      const heatmapBuffer = Buffer.from(prediction.heatmap_b64.split(',')[1] || prediction.heatmap_b64, 'base64');
+      const isSynthetic = false;
+      
+      // Setup focus regions for UI
+      const affectedRegions = [{
+        region: 'AI Neural Focus Area',
+        intensity: 0.9,
+        coordinates: { x: width / 2, y: height / 2, width: 60, height: 60 }
+      }];
+      const primaryPeak = { x: width / 2, y: height / 2 };
 
       // Create overlay on original image
       const overlayBuffer = await createOverlayImage(imageBuffer, heatmapBuffer, width, height);
 
       heatmaps.push({
         condition: prediction.condition,
-        heatmapImageUrl: prediction.heatmap_b64 
-            ? (prediction.heatmap_b64.startsWith('data:') ? prediction.heatmap_b64 : `data:image/png;base64,${prediction.heatmap_b64}`)
-            : `data:image/png;base64,${heatmapBuffer.toString('base64')}`,
+        heatmapImageUrl: prediction.heatmap_b64.startsWith('data:')
+          ? prediction.heatmap_b64
+          : `data:image/png;base64,${prediction.heatmap_b64}`,
         overlayImageUrl: `data:image/png;base64,${overlayBuffer.toString('base64')}`,
         affectedRegions,
         interpretationNotes: generateInterpretationNotes(prediction, affectedRegions),
-        isSynthetic,
-        regionX: primaryPeak ? primaryPeak.x / (isSynthetic && heatmapTensor ? heatmapTensor.shape[1] : width) : 0.5,
-        regionY: primaryPeak ? primaryPeak.y / (isSynthetic && heatmapTensor ? heatmapTensor.shape[0] : height) : 0.5,
+        isSynthetic: false,
+        regionX: primaryPeak.x / width,
+        regionY: primaryPeak.y / height,
         severity: prediction.severity,
         confidence: typeof prediction.confidence === 'number' && prediction.confidence <= 1
           ? Math.round(prediction.confidence * 100)
           : Math.round(prediction.confidence || 0),
       } as any);
-
-      if (heatmapTensor) {
-        heatmapTensor.dispose();
-      }
     } catch (error) {
       console.error(`Error generating heatmap for ${prediction.condition}:`, error);
     }

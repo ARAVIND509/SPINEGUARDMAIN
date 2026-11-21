@@ -9,3 +9,4 @@ __pycache__/
 *.zip
 prisma/dev.db
 *.db
+uploads/

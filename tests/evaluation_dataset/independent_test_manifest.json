@@ -1,0 +1,41 @@
+[
+  {
+    "patient_id": "PAT-TEST-01",
+    "cohort": "Independent Spinal Curvature Cohort",
+    "filename": "sample-spine-rotated.png",
+    "source_path": "test-data/sample-spine-rotated.png",
+    "modality": "X-Ray",
+    "age": 28,
+    "gender": "Female",
+    "ground_truth_label": "Spinal Curvature / Scoliosis",
+    "is_abnormal": true,
+    "split": "test",
+    "clinical_notes": "Blinded independent test case: Radiograph exhibiting spinal column coronal tilt."
+  },
+  {
+    "patient_id": "PAT-TEST-02",
+    "cohort": "Independent Disc Pathology Cohort",
+    "filename": "download_1759743544261.jpg",
+    "source_path": "attached_assets/download_1759743544261.jpg",
+    "modality": "MRI",
+    "age": 46,
+    "gender": "Male",
+    "ground_truth_label": "Degenerative Disc Disease",
+    "is_abnormal": true,
+    "split": "test",
+    "clinical_notes": "Blinded independent test case: T2 sagittal MRI exhibiting localized disc dehydration."
+  },
+  {
+    "patient_id": "PAT-TEST-03",
+    "cohort": "Independent Healthy Control Cohort",
+    "filename": "normal_test_slice_PAT-TEST-03.png",
+    "source_path": "attached_assets/normal_test_slice_PAT-TEST-03.png",
+    "modality": "MRI",
+    "age": 40,
+    "gender": "Male",
+    "ground_truth_label": "Normal",
+    "is_abnormal": false,
+    "split": "test",
+    "clinical_notes": "Blinded independent test case: Normal spinal MRI slice with preserved alignment and disc heights."
+  }
+]

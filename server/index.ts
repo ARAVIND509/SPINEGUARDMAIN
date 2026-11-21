@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
+import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import { setupVite, serveStatic, log } from "./vite";
@@ -14,8 +15,24 @@ import { logger } from "./logger";
 
 const app = express();
 
-// Security Headers
-app.use(helmet());
+// Security Headers with custom Content-Security-Policy for Three.js, WebSockets, and Blobs
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        imgSrc: ["'self'", "data:", "blob:", "https:"],
+        connectSrc: ["'self'", "ws:", "wss:", "blob:", "https:"],
+        workerSrc: ["'self'", "blob:"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+  })
+);
 
 // Rate Limiting (Basic protection against brute force)
 const apiLimiter = rateLimit({
@@ -115,10 +132,11 @@ app.use((req, res, next) => {
   });
 
   // DEVELOPMENT MODE → use Vite; PRODUCTION MODE → serve static assets
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
+  const distPublicPath = path.resolve(process.cwd(), "dist", "public");
+  if (process.env.NODE_ENV === "production" || fs.existsSync(distPublicPath)) {
     serveStatic(app);
+  } else {
+    await setupVite(app, server);
   }
 
   // Railway / Render provides PORT env variable

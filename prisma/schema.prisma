@@ -9,6 +9,8 @@ datasource db {
 
 model Patient {
   id              String   @id @default(uuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   patientId       String   @unique
   name            String
   age             Int?
@@ -23,6 +25,7 @@ model Patient {
   doctorNotes     DoctorNote[]
   medications     Medication[]
 
+  @@index([userId])
   @@map("patients")
 }
 
@@ -91,9 +94,10 @@ model Analysis {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  username String  @unique
+  id       String    @id @default(uuid())
+  username String    @unique
   password String
+  patients Patient[]
 
   @@map("users")
 }

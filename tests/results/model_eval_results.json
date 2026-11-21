@@ -1,0 +1,147 @@
+{
+  "timestamp": "2026-11-21T21:15:06Z",
+  "model_architecture": "ResNet-50",
+  "total_parameters": 23520326,
+  "trainable_parameters": 23520326,
+  "conv_layers": 53,
+  "classes": [
+    "Disc Herniation",
+    "Spinal Stenosis",
+    "Degenerative Disc Disease",
+    "Scoliosis",
+    "Vertebral Fracture",
+    "Spondylolisthesis"
+  ],
+  "arch_verification_status": "PASS",
+  "determinism_max_variance": 0.0,
+  "is_deterministic": true,
+  "weights_path": "C:\\Users\\ARAVIND\\.gemini\\antigravity\\scratch\\SPINEGUARDMAIN\\tests\\..\\python-api\\models\\spine_resnet50.pth",
+  "custom_weights_loaded": false,
+  "evaluation_metrics": {
+    "test_samples_count": 3,
+    "true_positives": 2,
+    "true_negatives": 0,
+    "false_positives": 1,
+    "false_negatives": 0,
+    "accuracy": 0.6667,
+    "sensitivity_recall": 1.0,
+    "specificity": 0.0,
+    "precision": 0.6667,
+    "f1_score": 0.8
+  },
+  "overfitting_underfitting_analysis": {
+    "underfitting": true,
+    "overfitting": false,
+    "notes": [
+      "Classifier head is using uncalibrated weights initialized from scratch (as noted in train_dummy_weights.py).",
+      "Backbone retains ImageNet feature extractors, but requires fine-tuning on specialized spinal DICOM datasets."
+    ]
+  },
+  "scan_evaluations": [
+    {
+      "scan_id": "SCAN-01",
+      "name": "sample-spine.png (Sagittal Spine X-Ray)",
+      "expected_abnormal": true,
+      "predicted_abnormal": true,
+      "top_condition": "Degenerative Disc Disease",
+      "confidence_scores": {
+        "Disc Herniation": {
+          "confidence": 49.6,
+          "severity": "normal"
+        },
+        "Spinal Stenosis": {
+          "confidence": 46.9,
+          "severity": "normal"
+        },
+        "Degenerative Disc Disease": {
+          "confidence": 53.4,
+          "severity": "mild"
+        },
+        "Scoliosis": {
+          "confidence": 51.8,
+          "severity": "mild"
+        },
+        "Vertebral Fracture": {
+          "confidence": 50.6,
+          "severity": "mild"
+        },
+        "Spondylolisthesis": {
+          "confidence": 53.1,
+          "severity": "mild"
+        }
+      },
+      "vertebrae_detected": 4,
+      "summary": "PyTorch ResNet-50 detected Degenerative Disc Disease with 53.4% confidence. Additional 3 findings noted."
+    },
+    {
+      "scan_id": "SCAN-02",
+      "name": "sample-spine-rotated.png (Perturbed/Rotated Scan)",
+      "expected_abnormal": true,
+      "predicted_abnormal": true,
+      "top_condition": "Vertebral Fracture",
+      "confidence_scores": {
+        "Disc Herniation": {
+          "confidence": 51.5,
+          "severity": "mild"
+        },
+        "Spinal Stenosis": {
+          "confidence": 45.7,
+          "severity": "normal"
+        },
+        "Degenerative Disc Disease": {
+          "confidence": 52.3,
+          "severity": "mild"
+        },
+        "Scoliosis": {
+          "confidence": 51.9,
+          "severity": "mild"
+        },
+        "Vertebral Fracture": {
+          "confidence": 53.5,
+          "severity": "mild"
+        },
+        "Spondylolisthesis": {
+          "confidence": 51.1,
+          "severity": "mild"
+        }
+      },
+      "vertebrae_detected": 4,
+      "summary": "PyTorch ResNet-50 detected Vertebral Fracture with 53.5% confidence. Additional 4 findings noted."
+    },
+    {
+      "scan_id": "SCAN-03",
+      "name": "N1,N,40,M_1_0_1759664214363.jpg (Clinical Cervical/Thoracic MRI)",
+      "expected_abnormal": false,
+      "predicted_abnormal": true,
+      "top_condition": "Disc Herniation",
+      "confidence_scores": {
+        "Disc Herniation": {
+          "confidence": 54.1,
+          "severity": "mild"
+        },
+        "Spinal Stenosis": {
+          "confidence": 44.7,
+          "severity": "normal"
+        },
+        "Degenerative Disc Disease": {
+          "confidence": 54.0,
+          "severity": "mild"
+        },
+        "Scoliosis": {
+          "confidence": 52.3,
+          "severity": "mild"
+        },
+        "Vertebral Fracture": {
+          "confidence": 51.2,
+          "severity": "mild"
+        },
+        "Spondylolisthesis": {
+          "confidence": 52.4,
+          "severity": "mild"
+        }
+      },
+      "vertebrae_detected": 1,
+      "summary": "PyTorch ResNet-50 detected Disc Herniation with 54.1% confidence. Additional 4 findings noted."
+    }
+  ]
+}

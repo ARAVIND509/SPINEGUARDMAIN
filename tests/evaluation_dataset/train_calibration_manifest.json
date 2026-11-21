@@ -1,0 +1,28 @@
+[
+  {
+    "patient_id": "PAT-CAL-01",
+    "cohort": "Calibration Normal Cohort",
+    "filename": "N1,N,40,M_1_0_1759664214363.jpg",
+    "source_path": "attached_assets/N1,N,40,M_1_0_1759664214363.jpg",
+    "modality": "MRI",
+    "age": 40,
+    "gender": "Male",
+    "ground_truth_label": "Normal",
+    "is_abnormal": false,
+    "split": "calibration",
+    "clinical_notes": "Healthy adult control study from Lumbar Spine MRI dataset with preserved disc spaces."
+  },
+  {
+    "patient_id": "PAT-CAL-02",
+    "cohort": "Calibration Pathology Cohort",
+    "filename": "sample-spine.png",
+    "source_path": "test-data/sample-spine.png",
+    "modality": "X-Ray",
+    "age": 52,
+    "gender": "Female",
+    "ground_truth_label": "Degenerative Disc Disease",
+    "is_abnormal": true,
+    "split": "calibration",
+    "clinical_notes": "Sagittal lumbar radiograph exhibiting intervertebral disc collapse."
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "patient_id": "PAT-N01",
+    "cohort": "Healthy Control Cohort",
+    "filename": "N1,N,40,M_1_0_1759664214363.jpg",
+    "source_path": "attached_assets/N1,N,40,M_1_0_1759664214363.jpg",
+    "modality": "MRI",
+    "age": 40,
+    "gender": "Male",
+    "ground_truth_label": "Normal",
+    "is_abnormal": false,
+    "clinical_notes": "Control study from published Lumbar Spine dataset with preserved disc spaces and no neural compression."
+  },
+  {
+    "patient_id": "PAT-D01",
+    "cohort": "Degenerative Spine Cohort",
+    "filename": "sample-spine.png",
+    "source_path": "test-data/sample-spine.png",
+    "modality": "X-Ray",
+    "age": 52,
+    "gender": "Female",
+    "ground_truth_label": "Degenerative Disc Disease / Herniation",
+    "is_abnormal": true,
+    "clinical_notes": "Sagittal lumbar radiograph exhibiting intervertebral disc height collapse at lower lumbar segments."
+  },
+  {
+    "patient_id": "PAT-S01",
+    "cohort": "Spinal Curvature Cohort",
+    "filename": "sample-spine-rotated.png",
+    "source_path": "test-data/sample-spine-rotated.png",
+    "modality": "X-Ray",
+    "age": 28,
+    "gender": "Female",
+    "ground_truth_label": "Spinal Curvature / Scoliosis",
+    "is_abnormal": true,
+    "clinical_notes": "Radiograph exhibiting vertebral column tilt with measurable Cobb angle coronal deviation."
+  },
+  {
+    "patient_id": "PAT-C01",
+    "cohort": "Lumbar Pathology Crop Cohort",
+    "filename": "download_1759743544261.jpg",
+    "source_path": "attached_assets/download_1759743544261.jpg",
+    "modality": "MRI",
+    "age": 46,
+    "gender": "Male",
+    "ground_truth_label": "Degenerative Disc Disease",
+    "is_abnormal": true,
+    "clinical_notes": "Focal T2 MRI slice displaying desiccation and annular posterior disc bulging."
+  }
+]

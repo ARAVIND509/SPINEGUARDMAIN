@@ -19,6 +19,10 @@ services:
     env: node
     buildCommand: npm install && npm run build
     startCommand: npm start
+    disk:
+      name: spineguard-uploads
+      mountPath: /app/uploads
+      sizeGB: 5
     envVars:
       - key: DATABASE_URL
         fromDatabase:

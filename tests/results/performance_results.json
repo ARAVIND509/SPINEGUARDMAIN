@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-11-21T21:19:00Z",
+  "iterations": 10,
+  "hardware": "cpu",
+  "benchmarks": {
+    "image_loading_and_transform": {
+      "mean_ms": 26.61,
+      "median_ms": 26.44,
+      "std_ms": 1.35,
+      "min_ms": 24.32,
+      "max_ms": 29.44,
+      "p95_ms": 28.79
+    },
+    "model_forward_inference": {
+      "mean_ms": 160.88,
+      "median_ms": 158.16,
+      "std_ms": 12.27,
+      "min_ms": 139.34,
+      "max_ms": 185.45,
+      "p95_ms": 180.6
+    },
+    "gradcam_backward_and_render": {
+      "mean_ms": 525.13,
+      "median_ms": 515.37,
+      "std_ms": 42.59,
+      "min_ms": 472.97,
+      "max_ms": 605.39,
+      "p95_ms": 598.94
+    },
+    "morphological_spine_analysis": {
+      "mean_ms": 176.33,
+      "median_ms": 173.84,
+      "std_ms": 7.56,
+      "min_ms": 169.74,
+      "max_ms": 193.18,
+      "p95_ms": 190.55
+    },
+    "end_to_end_pipeline": {
+      "mean_ms": 888.96,
+      "median_ms": 876.83,
+      "std_ms": 43.28,
+      "min_ms": 822.91,
+      "max_ms": 981.35,
+      "p95_ms": 965.99
+    },
+    "memory_profile_mb": {
+      "initial_rss": 0.0,
+      "post_warmup_rss": 0.0,
+      "final_rss": 0.0,
+      "net_model_allocation": 0.0
+    }
+  }
+}

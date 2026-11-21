@@ -1,0 +1,128 @@
+{
+  "timestamp": "2026-11-21T21:17:52Z",
+  "total_tests": 10,
+  "passed_tests": 10,
+  "pass_rate_percent": 100.0,
+  "test_matrix": [
+    {
+      "test_id": "IMG-01",
+      "name": "Valid Medical Spine Scan (PNG, 1024x1024)",
+      "category": "Valid Input",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 1386.49,
+      "top_prediction": "Disc Herniation",
+      "vertebrae_detected": 4,
+      "error_message": null
+    },
+    {
+      "test_id": "IMG-02",
+      "name": "Spoofed MIME-Type (HTML/Text file with .png extension)",
+      "category": "Invalid Format",
+      "expect_success": false,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 308.46,
+      "top_prediction": null,
+      "vertebrae_detected": 0,
+      "error_message": "cannot identify image file 'C:\\\\Users\\\\ARAVIND\\\\AppData\\\\Local\\\\Temp\\\\tmp3m23zqs8\\\\case2_invalid_text.png'"
+    },
+    {
+      "test_id": "IMG-03",
+      "name": "Corrupted / Truncated PNG Bitstream (150 bytes)",
+      "category": "Corrupted Data",
+      "expect_success": false,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 15.16,
+      "top_prediction": null,
+      "vertebrae_detected": 0,
+      "error_message": "Truncated File Read"
+    },
+    {
+      "test_id": "IMG-04",
+      "name": "Alternative Format (BMP format)",
+      "category": "Format Support",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 1205.44,
+      "top_prediction": "Disc Herniation",
+      "vertebrae_detected": 4,
+      "error_message": null
+    },
+    {
+      "test_id": "IMG-05",
+      "name": "Extremely Low-Resolution Image (32x32)",
+      "category": "Degraded Quality",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 1165.84,
+      "top_prediction": "Vertebral Fracture",
+      "vertebrae_detected": 1,
+      "error_message": null
+    },
+    {
+      "test_id": "IMG-06",
+      "name": "Severely Blurry Image (Gaussian Blur Radius=10)",
+      "category": "Degraded Quality",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 1256.35,
+      "top_prediction": "Disc Herniation",
+      "vertebrae_detected": 12,
+      "error_message": null
+    },
+    {
+      "test_id": "IMG-07",
+      "name": "High Noise Scanner Artifacts (Gaussian Noise sigma=50)",
+      "category": "Degraded Quality",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 1293.05,
+      "top_prediction": "Vertebral Fracture",
+      "vertebrae_detected": 1,
+      "error_message": null
+    },
+    {
+      "test_id": "IMG-08",
+      "name": "Extreme Aspect Ratio (64x1024 Strip)",
+      "category": "Geometry Stress",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 3247.25,
+      "top_prediction": "Disc Herniation",
+      "vertebrae_detected": 0,
+      "error_message": null
+    },
+    {
+      "test_id": "IMG-09",
+      "name": "Unrelated Non-Medical Image (512x512 Checkerboard)",
+      "category": "Out-of-Distribution",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 668.74,
+      "top_prediction": "Disc Herniation",
+      "vertebrae_detected": 0,
+      "error_message": null
+    },
+    {
+      "test_id": "IMG-10",
+      "name": "High-Resolution Image Stress Test (2500x2500, ~8MB)",
+      "category": "Stress Test",
+      "expect_success": true,
+      "actual_handled_gracefully": true,
+      "status": "PASS",
+      "execution_time_ms": 2319.53,
+      "top_prediction": "Disc Herniation",
+      "vertebrae_detected": 5,
+      "error_message": null
+    }
+  ]
+}

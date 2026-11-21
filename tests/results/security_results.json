@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-11-21T21:20:31Z",
+  "target": "https://spineguardmain.onrender.com",
+  "total_checks": 15,
+  "passed_checks": 15,
+  "pass_rate_percent": 100.0,
+  "checks": [
+    {
+      "test_id": "SEC-AUTH-_api_patients",
+      "name": "Auth barrier on GET /api/patients",
+      "category": "Authentication",
+      "http_status": 401,
+      "status": "PASS",
+      "details": "Access blocked for unauthenticated request"
+    },
+    {
+      "test_id": "SEC-AUTH-_api_analysis-archive",
+      "name": "Auth barrier on GET /api/analysis-archive",
+      "category": "Authentication",
+      "http_status": 401,
+      "status": "PASS",
+      "details": "Access blocked for unauthenticated request"
+    },
+    {
+      "test_id": "SEC-AUTH-_api_upload",
+      "name": "Auth barrier on POST /api/upload",
+      "category": "Authentication",
+      "http_status": 401,
+      "status": "PASS",
+      "details": "Access blocked for unauthenticated request"
+    },
+    {
+      "test_id": "SEC-AUTH-_api_analyze_invalid-scan-id",
+      "name": "Auth barrier on POST /api/analyze/invalid-scan-id",
+      "category": "Authentication",
+      "http_status": 401,
+      "status": "PASS",
+      "details": "Access blocked for unauthenticated request"
+    },
+    {
+      "test_id": "SEC-AUTH-_api_dashboard_stats",
+      "name": "Auth barrier on GET /api/dashboard/stats",
+      "category": "Authentication",
+      "http_status": 401,
+      "status": "PASS",
+      "details": "Access blocked for unauthenticated request"
+    },
+    {
+      "test_id": "SEC-PUB-_health",
+      "name": "Public access verification /health",
+      "category": "Access Control",
+      "http_status": 200,
+      "status": "PASS",
+      "details": "Public route responded with HTTP 200"
+    },
+    {
+      "test_id": "SEC-PUB-_api_user",
+      "name": "Public access verification /api/user",
+      "category": "Access Control",
+      "http_status": 401,
+      "status": "PASS",
+      "details": "Public route responded with HTTP 401"
+    },
+    {
+      "test_id": "SEC-PUB-_auth",
+      "name": "Public access verification /auth",
+      "category": "Access Control",
+      "http_status": 200,
+      "status": "PASS",
+      "details": "Public route responded with HTTP 200"
+    },
+    {
+      "test_id": "SEC-TRAV-FILENAME",
+      "name": "Path traversal test with filename: ../../etc/passwd.png",
+      "category": "Input Validation",
+      "http_status": 403,
+      "status": "PASS",
+      "details": "Server did not execute traversal or leak system files"
+    },
+    {
+      "test_id": "SEC-TRAV-FILENAME",
+      "name": "Path traversal test with filename: ..\\..\\windows\\system32\\cmd.exe.png",
+      "category": "Input Validation",
+      "http_status": 401,
+      "status": "PASS",
+      "details": "Server did not execute traversal or leak system files"
+    },
+    {
+      "test_id": "SEC-TRAV-FILENAME",
+      "name": "Path traversal test with filename: sample\u0000.png",
+      "category": "Input Validation",
+      "http_status": 403,
+      "status": "PASS",
+      "details": "Server did not execute traversal or leak system files"
+    },
+    {
+      "test_id": "SEC-CODE-PW-HASH",
+      "name": "Cryptographic Password Hashing Verification",
+      "category": "Cryptography",
+      "status": "PASS",
+      "details": "Passwords hashed with crypto.scrypt / salt, never stored plaintext"
+    },
+    {
+      "test_id": "SEC-CODE-HELMET",
+      "name": "HTTP Security Headers (Helmet.js)",
+      "category": "Network Security",
+      "status": "PASS",
+      "details": "Helmet middleware active on all express routes"
+    },
+    {
+      "test_id": "SEC-CODE-RATELIMIT",
+      "name": "Brute-force / DOS Rate Limiter",
+      "category": "Availability",
+      "status": "PASS",
+      "details": "express-rate-limit configured for /api/"
+    },
+    {
+      "test_id": "SEC-CODE-LOG-SANITIZATION",
+      "name": "PHI / Medical Image Log Privacy",
+      "category": "Privacy / PHI",
+      "status": "PASS",
+      "details": "Base64 medical images sanitized to [BASE64_IMAGE] before logging"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
+import path from "path";
+import { prisma } from "./db";
 import { storage } from "./storage";
 import { analyzeWithMedicalModel } from "./ml-analysis";
 import { analyzeWithSCT } from "./sct-bridge";
@@ -8,6 +10,7 @@ import { insertPatientSchema, insertScanSchema, insertAnalysisSchema } from "@sh
 import { updateAnalysisProgress } from "./websocket-handler";
 import { parseDICOM } from "./dicom-parser";
 import { ensureAuthenticated } from "./auth";
+import { saveScanFile, getScanBuffer, resolveScanFilePath } from "./scan-storage";
 import { 
   insertAppointmentSchema, 
   insertDoctorNoteSchema, 
@@ -34,7 +37,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Patient routes
   app.get("/api/patients", async (req, res) => {
     try {
-      const patients = await storage.getAllPatients();
+      const userId = (req.user as any)?.id;
+      const cursor = req.query.cursor as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+
+      if (cursor !== undefined || req.query.limit !== undefined) {
+        const pageSize = limit && limit > 0 && limit <= 100 ? limit : 20;
+        const paginated = await storage.getPatientsPaginated(cursor, pageSize, userId);
+        return res.json(paginated);
+      }
+
+      const patients = await storage.getAllPatients(userId);
       res.json(patients);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
@@ -43,26 +56,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/analysis-archive", async (req, res) => {
     try {
-      const scans = await storage.getRecentScans(200); // Get all/many scans
-      const archive = await Promise.all(
-        scans.map(async (scan) => {
-          const [patient, analysis] = await Promise.all([
-            storage.getPatient(scan.patientCaseId),
-            storage.getAnalysis(scan.id)
-          ]);
-          return { ...scan, patient, analysis };
-        })
-      );
-      res.json(archive);
+      const userId = (req.user as any)?.id;
+      const cursor = req.query.cursor as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+      const pageSize = limit && limit > 0 && limit <= 100 ? limit : 20;
+
+      // Single-Query Optimized Join: 1 SQL join query instead of 1 + 2N roundtrips
+      if (cursor !== undefined || req.query.limit !== undefined) {
+        const paginated = await storage.getScansWithDetailsPaginated(cursor, pageSize, userId);
+        return res.json(paginated);
+      }
+
+      const archive = await storage.getScansWithDetailsPaginated(undefined, 200, userId);
+      res.json(archive.items);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
   });
 
+  // Secure access-controlled medical scan file retrieval endpoint
+  app.get("/api/scans/file/:fileName", async (req, res) => {
+    try {
+      const resolvedPath = resolveScanFilePath(req.params.fileName);
+      if (!resolvedPath) {
+        return res.status(404).json({ error: "Scan file not found or invalid filename" });
+      }
+
+      // Authorization verification: verify scan ownership
+      const currentUserId = (req.user as any)?.id;
+      const fileName = path.basename(req.params.fileName);
+      const scan = await prisma.scan.findFirst({
+        where: { imageUrl: { contains: fileName } },
+        include: { patient: true }
+      });
+      if (scan && scan.patient.userId && currentUserId && scan.patient.userId !== currentUserId) {
+        return res.status(403).json({ error: "Forbidden: You are not authorized to view this patient's medical scan." });
+      }
+
+      res.setHeader("Cache-Control", "private, max-age=86400");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      return res.sendFile(resolvedPath);
+    } catch (error) {
+      return res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
   app.get("/api/patients/:id", async (req, res) => {
     try {
-      const patient = await storage.getPatient(req.params.id);
+      const userId = (req.user as any)?.id;
+      const patient = await storage.getPatient(req.params.id, userId);
       if (!patient) {
+        const rawPatient = await prisma.patient.findUnique({ where: { id: req.params.id } });
+        if (rawPatient && rawPatient.userId && rawPatient.userId !== userId) {
+          return res.status(403).json({ error: "Forbidden: You are not authorized to access this patient record." });
+        }
         return res.status(404).json({ error: "Patient not found" });
       }
       res.json(patient);
@@ -73,8 +120,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/patients", async (req, res) => {
     try {
+      const userId = (req.user as any)?.id;
       const validatedData = insertPatientSchema.parse(req.body);
-      const patient = await storage.createPatient(validatedData);
+      const patient = await storage.createPatient({ ...validatedData, userId });
       res.status(201).json(patient);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
@@ -236,6 +284,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields: patientCaseId and imageType" });
       }
 
+      // Patient ownership authorization check
+      const currentUserId = (req.user as any)?.id;
+      const patient = await storage.getPatient(patientCaseId, currentUserId);
+      if (!patient) {
+        return res.status(403).json({ error: "Forbidden: You are not authorized to upload scans for this patient." });
+      }
+
       console.log("Processing upload for patient:", patientCaseId, "type:", imageType);
 
       let imageUrl: string;
@@ -248,13 +303,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isDICOM) {
         console.log("DICOM file detected, parsing...");
         const dicomData = await parseDICOM(req.file.buffer);
-        imageUrl = `data:image/png;base64,${dicomData.imageBuffer.toString("base64")}`;
+        const saved = await saveScanFile(dicomData.imageBuffer, "dicom-converted.png", "image/png");
+        imageUrl = saved.fileUrl;
         metadata = dicomData.metadata;
-        console.log("DICOM parsed successfully:", metadata.PatientName);
+        console.log("DICOM parsed and stored to disk:", saved.fileName, metadata.PatientName);
       } else {
-        // Convert standard image to base64
-        const base64Image = req.file.buffer.toString("base64");
-        imageUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+        // Persist standard image to secure file storage
+        const saved = await saveScanFile(req.file.buffer, req.file.originalname, req.file.mimetype);
+        imageUrl = saved.fileUrl;
+        console.log("Scan image stored to disk:", saved.fileName);
       }
 
       // Create scan record
@@ -290,23 +347,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json({ analysis: existingAnalysis });
       }
 
-      const scan = await storage.getScan(scanId);
+      const currentUserId = (req.user as any)?.id;
+      const scan = await storage.getScan(scanId, currentUserId);
 
       if (!scan) {
-        return res.status(404).json({ error: "Scan not found" });
+        return res.status(404).json({ error: "Scan not found or access unauthorized" });
       }
 
       console.log(`Starting medical AI analysis for scan: ${scanId} using ${modelType} model`);
 
-      // Extract base64 from data URL (handle both data URL format and raw base64)
-      let base64Image = scan.imageUrl;
-      if (scan.imageUrl.includes(',')) {
-        base64Image = scan.imageUrl.split(",")[1];
-      }
-
-      // Convert base64 to Buffer for ML model
-      const imageBuffer = Buffer.from(base64Image, 'base64');
-      console.log(`Image buffer created: ${imageBuffer.length} bytes`);
+      // Load scan buffer from secure file storage or legacy Base64 data URL
+      const imageBuffer = await getScanBuffer(scan.imageUrl);
+      console.log(`Image buffer retrieved: ${imageBuffer.length} bytes`);
 
       const startTime = Date.now();
 

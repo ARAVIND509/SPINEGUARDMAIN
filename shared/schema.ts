@@ -15,6 +15,7 @@ export interface User {
 
 // Insert schemas (Validation only, will be used with Zod)
 const basePatient = z.object({
+  userId: z.string().nullable().optional(),
   patientId: z.string(),
   name: z.string(),
   age: z.number().int().nullable().optional(),
@@ -67,6 +68,7 @@ export const insertMedicationSchema = z.object({
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
 export interface Patient {
   id: string;
+  userId?: string | null;
   patientId: string;
   name: string;
   age: number | null;
