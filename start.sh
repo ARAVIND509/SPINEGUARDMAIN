@@ -7,4 +7,12 @@ python3 -m uvicorn ai_server:app --host 0.0.0.0 --port 8000 &
 
 echo "Starting Node.js Backend on port ${PORT:-5000}..."
 cd /app
-npm start
+node scripts/prepare-db.js
+
+if [ -f .env ]; then
+  set -a
+  source .env 2>/dev/null || true
+  set +a
+fi
+
+exec node dist/index.js
