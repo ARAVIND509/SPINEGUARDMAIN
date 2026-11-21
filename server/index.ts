@@ -50,7 +50,19 @@ app.use((req, res, next) => {
       let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
 
       if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+        try {
+          let safeJson = capturedJsonResponse;
+          if (typeof capturedJsonResponse === "object" && capturedJsonResponse !== null) {
+            safeJson = { ...capturedJsonResponse };
+            if ("imageUrl" in safeJson) safeJson.imageUrl = "[BASE64_IMAGE]";
+            if (safeJson.scan && safeJson.scan.imageUrl) {
+              safeJson.scan = { ...safeJson.scan, imageUrl: "[BASE64_IMAGE]" };
+            }
+          }
+          logLine += ` :: ${JSON.stringify(safeJson)}`;
+        } catch {
+          logLine += ` :: [Object]`;
+        }
       }
 
       if (logLine.length > 80) {
