@@ -76,7 +76,7 @@ export default function Upload() {
         xhr.send(formData);
       });
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/scans"] });
       toast({
         title: "Scan uploaded successfully",

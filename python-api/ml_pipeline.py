@@ -10,7 +10,11 @@ import base64
 class SpineModel(nn.Module):
     def __init__(self, num_classes=6):
         super(SpineModel, self).__init__()
-        self.base_model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+        try:
+            self.base_model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+        except Exception as e:
+            print(f"Notice: Initializing ResNet50 base without pre-downloaded weights: {e}")
+            self.base_model = models.resnet50(weights=None)
         num_ftrs = self.base_model.fc.in_features
         self.base_model.fc = nn.Linear(num_ftrs, num_classes)
         

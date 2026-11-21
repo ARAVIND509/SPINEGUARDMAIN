@@ -102,20 +102,14 @@ app.use((req, res, next) => {
     logger.error(`Express error handler: ${message}`, err);
   });
 
-  // DEVELOPMENT MODE → use Vite
+  // DEVELOPMENT MODE → use Vite; PRODUCTION MODE → serve static assets
   if (app.get("env") === "development") {
     await setupVite(app, server);
-  } 
-  // // production static serving
-const distPath = path.resolve(process.cwd(), "dist/public");
+  } else {
+    serveStatic(app);
+  }
 
-app.use(express.static(distPath));
-
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
-});
-
-  // Railway provides PORT env variable
+  // Railway / Render provides PORT env variable
   const port = parseInt(process.env.PORT || "5000", 10);
 
   const host =
@@ -123,15 +117,8 @@ app.get("*", (_req, res) => {
       ? "localhost"
       : "0.0.0.0";
 
-  server.listen(
-    {
-      port,
-      host,
-      reusePort: process.env.NODE_ENV !== "development"
-    },
-    () => {
-      logger.info(`Server running on ${host}:${port}`);
-    }
-  );
+  server.listen(port, host, () => {
+    logger.info(`Server running on ${host}:${port}`);
+  });
 
 })();

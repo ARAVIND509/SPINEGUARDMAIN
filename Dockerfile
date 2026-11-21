@@ -1,7 +1,7 @@
 # Multi-stage build for combining Node.js and Python
 
 # Stage 1: Build Node.js app
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 COPY package*.json ./
@@ -14,7 +14,7 @@ RUN npm run build
 # Stage 2: Final image with Python and Node.js
 FROM python:3.10-slim
 
-# Install dependencies for OpenCV and Node.js
+# Install dependencies for OpenCV, Node.js, and SQLite
 RUN apt-get update && apt-get install -y curl \
     libgl1 \
     libglib2.0-0 \
@@ -33,6 +33,10 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY scripts ./scripts
+
+# Generate Prisma client for Debian environment
+RUN npx prisma generate
 
 # Copy python API code
 COPY python-api ./python-api

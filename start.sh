@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-echo "Starting Python AI Server..."
+echo "Starting Python AI Server on port 8000..."
 cd /app/python-api
-gunicorn ai_server:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 1 --timeout 120 &
+python3 -m uvicorn ai_server:app --host 0.0.0.0 --port 8000 &
 
-echo "Starting Node.js Backend..."
+echo "Starting Node.js Backend on port ${PORT:-5000}..."
 cd /app
 npm start
