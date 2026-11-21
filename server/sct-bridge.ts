@@ -33,7 +33,7 @@ export async function analyzeWithSCT(
     const formData = new FormData();
     formData.append('image', blob, 'image.png');
 
-    const apiUrl = process.env.PYTHON_API_URL || 'http://localhost:8000';
+    const apiUrl = process.env.PYTHON_API_URL || 'http://127.0.0.1:8001';
     console.log(`Sending image to Python API at ${apiUrl}/analyze`);
 
     const response = await fetch(`${apiUrl}/analyze`, {

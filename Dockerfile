@@ -47,8 +47,8 @@ RUN chmod +x start.sh
 
 ENV NODE_ENV=production
 ENV PORT=5000
-# Node backend expects python API on 8000
-ENV PYTHON_API_URL=http://localhost:8000
+# Node backend expects python API on 8001
+ENV PYTHON_API_URL=http://127.0.0.1:8001
 
 EXPOSE 5000
 
