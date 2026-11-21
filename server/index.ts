@@ -124,10 +124,7 @@ app.use((req, res, next) => {
   // Railway / Render provides PORT env variable
   const port = parseInt(process.env.PORT || "5000", 10);
 
-  const host =
-    process.env.NODE_ENV === "development"
-      ? "localhost"
-      : "0.0.0.0";
+  const host = "0.0.0.0";
 
   server.listen(port, host, () => {
     logger.info(`Server running on ${host}:${port}`);

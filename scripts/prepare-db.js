@@ -9,8 +9,17 @@ const envPath = path.resolve(process.cwd(), ".env");
 
 function setProviderInSchema(targetProvider) {
   let content = fs.readFileSync(schemaPath, "utf-8");
-  const datasourceRegex = /(datasource\s+db\s*\{[\s\S]*?provider\s*=\s*")[^"]+(")/;
-  content = content.replace(datasourceRegex, `$1${targetProvider}$2`);
+  if (targetProvider === "sqlite") {
+    content = content.replace(
+      /datasource\s+db\s*\{[\s\S]*?\}/,
+      `datasource db {\n  provider = "sqlite"\n  url      = "file:./dev.db"\n}`
+    );
+  } else {
+    content = content.replace(
+      /datasource\s+db\s*\{[\s\S]*?\}/,
+      `datasource db {\n  provider = "postgresql"\n  url      = env("DATABASE_URL")\n}`
+    );
+  }
   fs.writeFileSync(schemaPath, content, "utf-8");
 }
 
@@ -102,7 +111,7 @@ async function main() {
       setProviderInSchema("postgresql");
       try {
         execSync("npx prisma generate", { stdio: "inherit" });
-        execSync("npx prisma db push --skip-generate", { stdio: "inherit", timeout: 15000 });
+        execSync("npx prisma db push --skip-generate", { stdio: "inherit", timeout: 60000 });
         console.log("✅ Successfully synced schema to PostgreSQL database!");
       } catch (err) {
         switchToSqlite(`PostgreSQL schema push failed: ${err.message}`);
