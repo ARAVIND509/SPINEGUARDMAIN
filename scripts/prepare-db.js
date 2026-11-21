@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import net from "net";
 import { execSync } from "child_process";
 import "dotenv/config";
 
@@ -13,8 +14,33 @@ function setProviderInSchema(targetProvider) {
   fs.writeFileSync(schemaPath, content, "utf-8");
 }
 
-let dbUrl = process.env.DATABASE_URL || "file:./dev.db";
-let isPostgres = dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://");
+function checkTcpConnection(host, port, timeoutMs = 4000) {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    socket.setTimeout(timeoutMs);
+
+    socket.on("connect", () => {
+      socket.destroy();
+      resolve(true);
+    });
+
+    socket.on("timeout", () => {
+      socket.destroy();
+      resolve(false);
+    });
+
+    socket.on("error", () => {
+      socket.destroy();
+      resolve(false);
+    });
+
+    try {
+      socket.connect(port, host);
+    } catch {
+      resolve(false);
+    }
+  });
+}
 
 function switchToSqlite(reason) {
   console.warn(`\n⚠️  ${reason}`);
@@ -22,7 +48,7 @@ function switchToSqlite(reason) {
 
   process.env.DATABASE_URL = "file:./dev.db";
 
-  // Persist to .env so child/subsequent processes use the fallback
+  // Persist to .env so subsequent processes (dist/index.js) use it
   let envContent = "";
   if (fs.existsSync(envPath)) {
     envContent = fs.readFileSync(envPath, "utf-8");
@@ -38,38 +64,67 @@ function switchToSqlite(reason) {
 
   setProviderInSchema("sqlite");
   console.log("Generating Prisma client for SQLite fallback...");
-  execSync("npx prisma generate", { stdio: "inherit" });
-  console.log("Syncing SQLite database...");
+  const execEnv = { ...process.env, DATABASE_URL: "file:./dev.db" };
   try {
-    execSync("npx prisma db push --skip-generate", { stdio: "inherit" });
-    console.log("✅ SQLite database ready.");
-  } catch (err) {
-    console.warn("Prisma db push warning:", err.message);
-  }
-}
-
-if (isPostgres) {
-  const maskedUrl = dbUrl.replace(/:[^:@]*@/, ":***@");
-  console.log(`Detected PostgreSQL URL: ${maskedUrl}`);
-  setProviderInSchema("postgresql");
-  try {
-    console.log("Generating Prisma client for PostgreSQL...");
-    execSync("npx prisma generate", { stdio: "inherit" });
-    console.log("Testing connection and syncing PostgreSQL schema...");
-    // 15 second timeout prevents hanging if DB host is unreachable
-    execSync("npx prisma db push --skip-generate", { stdio: "inherit", timeout: 15000 });
-    console.log("✅ Successfully connected and synced with PostgreSQL database!");
-  } catch (err) {
-    switchToSqlite(`PostgreSQL connection failed: ${err.message || 'server unreachable'}`);
-  }
-} else {
-  console.log("Using SQLite database...");
-  setProviderInSchema("sqlite");
-  try {
-    execSync("npx prisma generate", { stdio: "inherit" });
-    execSync("npx prisma db push --skip-generate", { stdio: "inherit" });
+    execSync("npx prisma generate", { stdio: "inherit", env: execEnv });
+    execSync("npx prisma db push --skip-generate", { stdio: "inherit", env: execEnv });
     console.log("✅ SQLite database ready.");
   } catch (err) {
     console.warn("SQLite setup warning:", err.message);
   }
 }
+
+async function main() {
+  let dbUrl = process.env.DATABASE_URL || "file:./dev.db";
+  let isPostgres = dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://");
+
+  if (isPostgres) {
+    const maskedUrl = dbUrl.replace(/:[^:@]*@/, ":***@");
+    console.log(`Checking PostgreSQL reachability for: ${maskedUrl}`);
+
+    let host = "";
+    let port = 5432;
+    try {
+      const parsed = new URL(dbUrl);
+      host = parsed.hostname;
+      port = parseInt(parsed.port || "5432", 10);
+    } catch (e) {
+      console.warn("Could not parse DATABASE_URL:", e.message);
+    }
+
+    let isReachable = false;
+    if (host) {
+      isReachable = await checkTcpConnection(host, port, 4000);
+    }
+
+    if (isReachable) {
+      console.log(`✅ PostgreSQL host ${host}:${port} is reachable! Syncing schema...`);
+      setProviderInSchema("postgresql");
+      try {
+        execSync("npx prisma generate", { stdio: "inherit" });
+        execSync("npx prisma db push --skip-generate", { stdio: "inherit", timeout: 15000 });
+        console.log("✅ Successfully synced schema to PostgreSQL database!");
+      } catch (err) {
+        switchToSqlite(`PostgreSQL schema push failed: ${err.message}`);
+      }
+    } else {
+      switchToSqlite(`PostgreSQL host ${host}:${port} is not reachable from this instance.`);
+    }
+  } else {
+    console.log("Using SQLite database...");
+    setProviderInSchema("sqlite");
+    const execEnv = { ...process.env, DATABASE_URL: "file:./dev.db" };
+    try {
+      execSync("npx prisma generate", { stdio: "inherit", env: execEnv });
+      execSync("npx prisma db push --skip-generate", { stdio: "inherit", env: execEnv });
+      console.log("✅ SQLite database ready.");
+    } catch (err) {
+      console.warn("SQLite setup warning:", err.message);
+    }
+  }
+}
+
+main().catch((err) => {
+  console.error("Fatal prepare-db error:", err);
+  process.exit(0); // Exit 0 so the server can attempt to start regardless
+});
