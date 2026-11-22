@@ -100,7 +100,7 @@ export interface IStorage {
 
   // Scan operations
   getScan(id: string, userId?: string): Promise<Scan | undefined>;
-  getScansByPatient(patientCaseId: string): Promise<Scan[]>;
+  getScansByPatient(patientCaseId: string, userId?: string): Promise<Scan[]>;
   getRecentScans(limit?: number, userId?: string): Promise<Scan[]>;
   getScansPaginated(cursor?: string, limit?: number, userId?: string): Promise<{ items: Scan[]; nextCursor: string | null; hasMore: boolean }>;
   getScansWithDetailsPaginated(cursor?: string, limit?: number, userId?: string): Promise<{ items: any[]; nextCursor: string | null; hasMore: boolean }>;
@@ -207,7 +207,15 @@ export class DatabaseStorage implements IStorage {
     return scan;
   }
 
-  async getScansByPatient(patientCaseId: string): Promise<Scan[]> {
+  async getScansByPatient(patientCaseId: string, userId?: string): Promise<Scan[]> {
+    if (userId) {
+      const patient = await prisma.patient.findUnique({
+        where: { id: patientCaseId }
+      });
+      if (!patient || (patient.userId && patient.userId !== userId)) {
+        return []; // unauthorized cross-user access blocked
+      }
+    }
     return await prisma.scan.findMany({
       where: { patientCaseId },
       orderBy: { uploadedAt: 'desc' }

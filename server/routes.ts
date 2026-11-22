@@ -196,7 +196,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Scan routes
   app.get("/api/scans/:patientCaseId", async (req, res) => {
     try {
-      const scans = await storage.getScansByPatient(req.params.patientCaseId);
+      const user = req.user as any;
+      const userId = user?.role === "admin" ? undefined : user?.id;
+      const scans = await storage.getScansByPatient(req.params.patientCaseId, userId);
       res.json(scans);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
@@ -205,9 +207,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/scans/single/:scanId", async (req, res) => {
     try {
-      const scan = await storage.getScan(req.params.scanId);
+      const user = req.user as any;
+      const userId = user?.role === "admin" ? undefined : user?.id;
+      const scan = await storage.getScan(req.params.scanId, userId);
       if (!scan) {
-        return res.status(404).json({ error: "Scan not found" });
+        return res.status(404).json({ error: "Scan not found or access unauthorized" });
       }
       res.json(scan);
     } catch (error) {
@@ -433,6 +437,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Analysis routes
   app.get("/api/analysis/:scanId", async (req, res) => {
     try {
+      const user = req.user as any;
+      const userId = user?.role === "admin" ? undefined : user?.id;
+      const scan = await storage.getScan(req.params.scanId, userId);
+      if (!scan) {
+        return res.status(404).json({ error: "Analysis not found or access unauthorized" });
+      }
+
       const analysis = await storage.getAnalysis(req.params.scanId);
       if (!analysis) {
         return res.status(404).json({ error: "Analysis not found" });
@@ -455,6 +466,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({
           error: "Forbidden: Read-only users are not authorized to review or modify clinical findings."
         });
+      }
+
+      const existing = await storage.getAnalysisById(analysisId);
+      if (!existing) {
+        return res.status(404).json({ error: "Analysis not found" });
+      }
+      const userId = userRole === "admin" ? undefined : user?.id;
+      const scan = await storage.getScan(existing.scanId, userId);
+      if (!scan) {
+        return res.status(403).json({ error: "Forbidden: You are not authorized to modify this analysis." });
       }
 
       const { decision, modifiedFindings, reasonForModification, notes } = req.body;
@@ -517,6 +538,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existing = await storage.getAnalysisById(analysisId);
       if (!existing) {
         return res.status(404).json({ error: "Analysis record not found" });
+      }
+      const userId = userRole === "admin" ? undefined : user?.id;
+      const scan = await storage.getScan(existing.scanId, userId);
+      if (!scan) {
+        return res.status(403).json({ error: "Forbidden: You are not authorized to finalize this analysis." });
       }
 
       const existingResults = (typeof existing.results === "string" ? JSON.parse(existing.results) : existing.results) || {};
