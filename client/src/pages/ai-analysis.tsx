@@ -24,6 +24,7 @@ import { ScanAnnotationOverlay } from "@/components/ScanAnnotationOverlay";
 import { GradCAMViewer } from "@/components/GradCAMViewer";
 import { MedicalImageViewer } from "@/components/MedicalImageViewer";
 import { ReviewerWorkflowCard } from "@/components/ReviewerWorkflowCard";
+import { PatientFriendlySummary } from "@/components/PatientFriendlySummary";
 
 // Group Findings and Deduplicate
 const groupAndAverageFindings = (findings: any[]) => {
@@ -72,6 +73,7 @@ export default function AIAnalysis() {
   const [imgDims, setImgDims] = useState({ width: 0, height: 0 });
   const [fullscreenImgDims, setFullscreenImgDims] = useState({ width: 0, height: 0 });
   const [visualMode, setVisualMode] = useState<'standard' | 'perfusion' | 'signal' | 'neural'>('standard');
+  const [interpretationMode, setInterpretationMode] = useState<'patient' | 'clinical'>('patient');
   const { toast } = useToast();
   const scanContainerRef = useRef<HTMLDivElement>(null);
 
@@ -380,6 +382,53 @@ export default function AIAnalysis() {
             </Button>
           </div>
         </motion.div>
+
+        {/* View Mode Selector: Patient-Friendly vs Radiologist Mode */}
+        {results && (
+          <div className="mb-8 p-3 rounded-2xl glass-card flex flex-col sm:flex-row items-center justify-between gap-4 border border-border/60">
+            <div className="flex items-center gap-2.5 px-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Display Mode:
+              </span>
+              <Badge variant="outline" className="text-[10px] font-mono text-primary border-primary/30">
+                {interpretationMode === "patient" ? "SIMPLIFIED PATIENT EXPLANATION" : "PHYSICIAN PACS VIEW"}
+              </Badge>
+            </div>
+            <div className="flex rounded-xl p-1 bg-muted/60 border border-border/50 text-xs font-semibold w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setInterpretationMode("patient")}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  interpretationMode === "patient"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Heart className="h-3.5 w-3.5 text-rose-300" />
+                <span>Patient-Friendly (Simple Words)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setInterpretationMode("clinical")}
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${
+                  interpretationMode === "clinical"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Stethoscope className="h-3.5 w-3.5 text-cyan-300" />
+                <span>Doctor / Radiologist Mode</span>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Patient Friendly Plain English Guide */}
+        {results && interpretationMode === "patient" && (
+          <div className="mb-10 animate-in fade-in-50 duration-300">
+            <PatientFriendlySummary results={results} patientName={patient?.name} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
           {/* Main Visualizer - 8 cols */}

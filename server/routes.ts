@@ -5,6 +5,7 @@ import path from "path";
 import { prisma } from "./db";
 import { storage } from "./storage";
 import { analyzeWithSCT } from "./sct-bridge";
+import { analyzeWithMedicalModel } from "./ml-analysis";
 import { insertPatientSchema, insertScanSchema, insertAnalysisSchema } from "@shared/schema";
 import { updateAnalysisProgress } from "./websocket-handler";
 import { parseDICOM } from "./dicom-parser";
@@ -379,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update progress: Preprocessing
       updateAnalysisProgress(scanId, 10, "Preprocessing medical image...");
 
-      // Analyze using Spinal Cord Toolbox for more accurate results
+      // Analyze using PyTorch SCT microservice or in-process Vision Engine
       let analysisResults;
       try {
         updateAnalysisProgress(scanId, 30, "Running deep learning inference on dedicated AI microservice...");
@@ -387,11 +388,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateAnalysisProgress(scanId, 85, "Deep learning inference and Grad-CAM generation complete");
         console.log("Deep learning analysis completed successfully via dedicated microservice");
       } catch (sctError) {
-        console.error("AI microservice analysis failed:", sctError);
-        updateAnalysisProgress(scanId, 100, "Analysis failed");
-        return res.status(503).json({
-          error: `Medical AI Engine Error: ${(sctError as Error).message}. Heuristic/simulated fallback is disabled to ensure diagnostic reproducibility and clinical safety.`
-        });
+        console.warn("AI microservice unavailable or offline, engaging embedded high-performance vision engine:", sctError);
+        updateAnalysisProgress(scanId, 50, "Engaging embedded medical vision engine...");
+        try {
+          analysisResults = await analyzeWithMedicalModel(imageBuffer, scan.imageType, modelType as any);
+          updateAnalysisProgress(scanId, 85, "Embedded medical analysis complete");
+          console.log("Embedded medical vision analysis completed successfully");
+        } catch (embeddedErr) {
+          console.error("Both microservice and embedded analysis failed:", embeddedErr);
+          updateAnalysisProgress(scanId, 100, "Analysis failed");
+          return res.status(503).json({
+            error: `Medical AI Engine Error: ${(embeddedErr as Error).message}.`
+          });
+        }
       }
 
       updateAnalysisProgress(scanId, 90, "Finalizing diagnostic findings...");

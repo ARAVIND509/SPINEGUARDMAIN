@@ -35,6 +35,7 @@ export async function analyzeWithSCT(
     const response = await fetch(`${apiUrl}/analyze`, {
       method: 'POST',
       body: formData,
+      signal: AbortSignal.timeout(5000),
     });
 
     if (!response.ok) {

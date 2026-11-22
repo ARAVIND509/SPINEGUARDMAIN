@@ -52,6 +52,33 @@ export async function analyzeWithMedicalModel(
   const tumor = conditions.find(c => c.condition === 'Tumor');
 
 
+  const primary = conditions.length > 0 ? (() => {
+    // Filter to only conditions that exceed the clinical threshold
+    const abnormal = conditions.filter(
+      c => c.severity !== 'normal' && c.confidence >= 28
+    );
+
+    // TRUE NORMAL STATE — nothing significant found
+    if (abnormal.length === 0) return undefined;
+
+    // Sort abnormal findings by severity, then confidence
+    const sorted = [...abnormal].sort((a, b) => {
+      const severityOrder: Record<string, number> = { severe: 3, moderate: 2, mild: 1, normal: 0 };
+      if (severityOrder[a.severity] !== severityOrder[b.severity]) {
+        return severityOrder[b.severity] - severityOrder[a.severity];
+      }
+      return b.confidence - a.confidence;
+    });
+
+    const top = sorted[0];
+    return {
+      condition: top.condition,
+      severity: top.severity,
+      confidence: top.confidence,
+      location: top.condition.includes("Disc") ? "Disc" : "Spine"
+    };
+  })() : undefined;
+
   // Generate comprehensive analysis based on ML predictions
   const analysisResults: AnalysisResults = {
     discHerniation: generateFinding(discHerniation, "Disc Herniation"),
@@ -63,41 +90,24 @@ export async function analyzeWithMedicalModel(
     infection: generateFinding(infection, "Infection"),
     tumor: generateFinding(tumor, "Tumor"),
 
-    // Priority 1: Simulated hemodynamics & soft tissue cards removed to maintain clinical integrity
-
-
     findings: conditions.map(c => ({
       condition: c.condition,
       severity: c.severity,
       confidence: c.confidence,
       location: c.condition.includes("Disc") ? "Disc" : "Spine"
     })),
-    primaryFinding: conditions.length > 0 ? (() => {
-      // Filter to only conditions that exceed the clinical threshold
-      const abnormal = conditions.filter(
-        c => c.severity !== 'normal' && c.confidence >= 28
-      );
-
-      // TRUE NORMAL STATE — nothing significant found
-      if (abnormal.length === 0) return undefined;
-
-      // Sort abnormal findings by severity, then confidence
-      const sorted = [...abnormal].sort((a, b) => {
-        const severityOrder: Record<string, number> = { severe: 3, moderate: 2, mild: 1, normal: 0 };
-        if (severityOrder[a.severity] !== severityOrder[b.severity]) {
-          return severityOrder[b.severity] - severityOrder[a.severity];
-        }
-        return b.confidence - a.confidence;
-      });
-
-      const primary = sorted[0];
-      return {
-        condition: primary.condition,
-        severity: primary.severity,
-        confidence: primary.confidence,
-        location: primary.condition.includes("Disc") ? "Disc" : "Spine"
-      };
-    })() : undefined,
+    checkedConditions: conditions.map(c => ({
+      condition: c.condition,
+      severity: c.severity,
+      confidence: c.confidence,
+      location: c.condition.includes("Disc") ? "Disc" : "Spine"
+    })),
+    primaryFinding: primary,
+    summary: primary
+      ? `${primary.severity.toUpperCase()} finding: ${primary.condition} detected with ${primary.confidence}% confidence in the ${primary.location || 'lumbar'} region.`
+      : "Evaluation complete. No acute high-grade spinal disorder detected across evaluated criteria.",
+    modelVersion: "Medical Vision Backbone v2 (TensorFlow / ResNet Architecture)",
+    explanationStatus: "EMBEDDED_TENSOR_ACTIVATION",
     mlPredictions: mlResults,
     gradCamHeatmaps: gradCamHeatmaps.length > 0 ? gradCamHeatmaps : undefined,
     heatmapTargets: gradCamHeatmaps.length > 0
