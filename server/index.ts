@@ -110,7 +110,8 @@ app.use((req, res, next) => {
 
       await storage.createUser({
         username: "admin",
-        password: hashedPassword
+        password: hashedPassword,
+        role: "admin"
       });
 
       logger.info("Admin created (admin / password123)");

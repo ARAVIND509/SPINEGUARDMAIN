@@ -108,8 +108,14 @@ export interface IStorage {
 
   // Analysis operations
   getAnalysis(scanId: string): Promise<Analysis | undefined>;
+  getAnalysisById(analysisId: string): Promise<Analysis | undefined>;
   getAllAnalyses(): Promise<Analysis[]>;
   createAnalysis(analysis: InsertAnalysis): Promise<Analysis>;
+  updateAnalysisReview(analysisId: string, review: any): Promise<Analysis>;
+
+  // Audit Log operations
+  createAuditLog(entry: { userId?: string; action: string; resource: string; details?: any; ipAddress?: string }): Promise<void>;
+  getAuditLogs(limit?: number): Promise<any[]>;
 
   // User operations
   getUser(id: string): Promise<User | undefined>;
@@ -311,6 +317,13 @@ export class DatabaseStorage implements IStorage {
     return analysis || undefined;
   }
 
+  async getAnalysisById(analysisId: string): Promise<Analysis | undefined> {
+    const analysis = await prisma.analysis.findUnique({
+      where: { id: analysisId }
+    });
+    return analysis || undefined;
+  }
+
   async getAllAnalyses(): Promise<Analysis[]> {
     return await prisma.analysis.findMany({
       orderBy: { analyzedAt: 'desc' }
@@ -324,6 +337,70 @@ export class DatabaseStorage implements IStorage {
         results: insertAnalysis.results as any
       }
     });
+  }
+
+  async updateAnalysisReview(analysisId: string, review: any): Promise<Analysis> {
+    const current = await prisma.analysis.findUnique({
+      where: { id: analysisId }
+    });
+    if (!current) {
+      throw new Error(`Analysis ${analysisId} not found`);
+    }
+
+    const currentResults = (typeof current.results === 'string'
+      ? JSON.parse(current.results)
+      : current.results) || {};
+
+    // Strictly preserve original AI predictions
+    if (!review.originalAiPrediction) {
+      review.originalAiPrediction = {
+        findings: currentResults.findings || currentResults.checkedConditions || [],
+        primaryFinding: currentResults.primaryFinding,
+        confidence: currentResults.confidence,
+        summary: currentResults.summary,
+        modelVersion: currentResults.modelVersion || "PyTorch ResNet-50 v2"
+      };
+    }
+
+    const updatedResults = {
+      ...currentResults,
+      humanReview: review
+    };
+
+    return await prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        results: updatedResults
+      }
+    });
+  }
+
+  async createAuditLog(entry: { userId?: string; action: string; resource: string; details?: any; ipAddress?: string }): Promise<void> {
+    try {
+      await (prisma as any).auditLog.create({
+        data: {
+          userId: entry.userId || null,
+          action: entry.action,
+          resource: entry.resource,
+          details: entry.details || null,
+          ipAddress: entry.ipAddress || null
+        }
+      });
+    } catch (e) {
+      console.error("Audit log error:", e);
+    }
+  }
+
+  async getAuditLogs(limit: number = 100): Promise<any[]> {
+    try {
+      return await (prisma as any).auditLog.findMany({
+        take: limit,
+        orderBy: { timestamp: "desc" }
+      });
+    } catch (e) {
+      console.error("Audit log fetch error:", e);
+      return [];
+    }
   }
 
   // User operations

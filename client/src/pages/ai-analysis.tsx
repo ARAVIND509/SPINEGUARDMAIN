@@ -23,6 +23,7 @@ import { SEVERITY_COLORS } from "@/lib/severity-colors";
 import { ScanAnnotationOverlay } from "@/components/ScanAnnotationOverlay";
 import { GradCAMViewer } from "@/components/GradCAMViewer";
 import { MedicalImageViewer } from "@/components/MedicalImageViewer";
+import { ReviewerWorkflowCard } from "@/components/ReviewerWorkflowCard";
 
 // Group Findings and Deduplicate
 const groupAndAverageFindings = (findings: any[]) => {
@@ -97,6 +98,10 @@ export default function AIAnalysis() {
   const { data: analysis, status: analysisStatus } = useQuery<Analysis>({
     queryKey: ["/api/analysis", scanId],
     enabled: !!scanId,
+  });
+
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ["/api/user"],
   });
 
   const analyzeMutation = useMutation({
@@ -645,13 +650,14 @@ export default function AIAnalysis() {
           </div>
         )}
 
-        {/* In-depth Tissue & Pathologies Section - FULL WIDTH */}
-        {
-          results && (
-            <div className="mb-12">
-            </div>
-          )
-        }
+        {/* Human-in-the-Loop Clinical Review Workflow */}
+        {analysis && (
+          <ReviewerWorkflowCard
+            analysis={analysis}
+            currentUser={currentUser}
+            className="mb-12"
+          />
+        )}
       </div >
 
       {/* Fullscreen Overlays */}

@@ -1,8 +1,11 @@
 import { z } from "zod";
 
+export type UserRole = "admin" | "reviewer" | "viewer";
+
 export const insertUserSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["admin", "reviewer", "viewer"]).optional().default("reviewer"),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -11,6 +14,7 @@ export interface User {
   id: string;
   username: string;
   password: string;
+  role?: UserRole;
 }
 
 // Insert schemas (Validation only, will be used with Zod)
@@ -301,4 +305,36 @@ export interface AnalysisResults {
   allHeatmaps?: Record<string, Record<string, string>>;
   modelVersion?: string;
   explanationStatus?: string;
+  humanReview?: HumanReview;
+}
+
+export type ReviewStatus =
+  | "awaiting_review"
+  | "accepted"
+  | "rejected"
+  | "modified"
+  | "finalized";
+
+export interface HumanReview {
+  status: ReviewStatus;
+  originalAiPrediction?: any;
+  decision: "accepted" | "rejected" | "modified" | "finalized";
+  modifiedFindings?: ClinicalFinding[];
+  reasonForModification?: string;
+  reviewerId: string;
+  reviewerUsername: string;
+  reviewedAt: string;
+  modelVersion: string;
+  reportVersion: string;
+  isFinalized: boolean;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  userId?: string | null;
+  action: string;
+  resource: string;
+  details?: any;
+  ipAddress?: string | null;
+  timestamp: Date;
 }

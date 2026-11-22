@@ -443,6 +443,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Human Reviewer Workflow: Submit Review (Accept, Reject, Modify)
+  app.post("/api/analysis/:id/review", async (req, res) => {
+    try {
+      const analysisId = req.params.id;
+      const user = req.user as any;
+      const userRole = user?.role || "reviewer";
+
+      // RBAC check: Viewers cannot review
+      if (userRole === "viewer") {
+        return res.status(403).json({
+          error: "Forbidden: Read-only users are not authorized to review or modify clinical findings."
+        });
+      }
+
+      const { decision, modifiedFindings, reasonForModification, notes } = req.body;
+      if (!decision || !["accepted", "rejected", "modified"].includes(decision)) {
+        return res.status(400).json({
+          error: "Invalid decision. Must be one of: 'accepted', 'rejected', 'modified'"
+        });
+      }
+
+      if (decision === "modified" && (!reasonForModification || reasonForModification.trim().length === 0)) {
+        return res.status(400).json({
+          error: "Clinical modification reason is required when modifying AI findings."
+        });
+      }
+
+      const reviewRecord = {
+        status: decision,
+        decision,
+        modifiedFindings: decision === "modified" ? (modifiedFindings || []) : undefined,
+        reasonForModification: reasonForModification || notes || "",
+        reviewerId: user?.id || "anonymous",
+        reviewerUsername: user?.username || "Authorized Clinical Reviewer",
+        reviewedAt: new Date().toISOString(),
+        modelVersion: "PyTorch ResNet-50 v2 (Layer4 Grad-CAM)",
+        reportVersion: "v1.1-reviewed",
+        isFinalized: false
+      };
+
+      const updated = await storage.updateAnalysisReview(analysisId, reviewRecord);
+
+      await storage.createAuditLog({
+        userId: user?.id,
+        action: "ANALYSIS_REVIEW_SUBMITTED",
+        resource: `analysis:${analysisId}`,
+        details: { decision, reviewer: user?.username, hasModifications: decision === "modified" },
+        ipAddress: req.ip
+      });
+
+      res.json({ success: true, analysis: updated });
+    } catch (error) {
+      console.error("Review submission error:", error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  // Human Reviewer Workflow: Finalize Report
+  app.post("/api/analysis/:id/finalize", async (req, res) => {
+    try {
+      const analysisId = req.params.id;
+      const user = req.user as any;
+      const userRole = user?.role || "reviewer";
+
+      // RBAC: Only reviewers or admins can finalize
+      if (userRole !== "admin" && userRole !== "reviewer") {
+        return res.status(403).json({
+          error: "Forbidden: Only authorized clinical reviewers and administrators can finalize medical reports."
+        });
+      }
+
+      const existing = await storage.getAnalysisById(analysisId);
+      if (!existing) {
+        return res.status(404).json({ error: "Analysis record not found" });
+      }
+
+      const existingResults = (typeof existing.results === "string" ? JSON.parse(existing.results) : existing.results) || {};
+      const priorReview = existingResults.humanReview || {};
+
+      const finalizedReview = {
+        ...priorReview,
+        status: "finalized",
+        decision: priorReview.decision || "accepted",
+        reviewerId: user?.id || priorReview.reviewerId || "reviewer",
+        reviewerUsername: user?.username || priorReview.reviewerUsername || "Authorized Reviewer",
+        reviewedAt: priorReview.reviewedAt || new Date().toISOString(),
+        finalizedAt: new Date().toISOString(),
+        finalizedBy: user?.username || "Authorized Reviewer",
+        modelVersion: existingResults.modelVersion || "PyTorch ResNet-50 v2",
+        reportVersion: "v1.0-final",
+        isFinalized: true
+      };
+
+      const updated = await storage.updateAnalysisReview(analysisId, finalizedReview);
+
+      await storage.createAuditLog({
+        userId: user?.id,
+        action: "REPORT_FINALIZED",
+        resource: `analysis:${analysisId}`,
+        details: { finalizedBy: user?.username, timestamp: finalizedReview.finalizedAt },
+        ipAddress: req.ip
+      });
+
+      res.json({ success: true, analysis: updated });
+    } catch (error) {
+      console.error("Report finalization error:", error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
+  // Audit Logs (Admins only)
+  app.get("/api/audit-logs", async (req, res) => {
+    try {
+      const user = req.user as any;
+      if (user?.role !== "admin") {
+        return res.status(403).json({ error: "Forbidden: Audit logs require administrative access." });
+      }
+      const logs = await storage.getAuditLogs(100);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
   app.get("/api/analyses", async (req, res) => {
     try {
       const analyses = await storage.getAllAnalyses();
