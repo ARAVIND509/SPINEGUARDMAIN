@@ -207,7 +207,8 @@ export default function AIAnalysis() {
       medicalRecordNumber: patient.patientId
     }, {
       imageType: scan.imageType,
-      uploadDate: scan.uploadedAt.toString()
+      uploadDate: scan.uploadedAt.toString(),
+      scanImageUrl: scan.imageUrl
     }, undefined, clinicInfo);
     
     toast({
