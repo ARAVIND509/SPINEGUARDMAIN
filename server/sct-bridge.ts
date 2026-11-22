@@ -5,11 +5,7 @@ import { fileURLToPath } from 'url';
 import type { AnalysisResults, DiagnosticFinding } from '@shared/schema';
 import {
   generateFinding,
-  getMaxSeverity,
-  generatePostureAnalysis,
-  generateSoftTissueAnalysis,
-  generateHiddenAbnormalityAnalysis,
-  generateBloodFlowAnalysis
+  getMaxSeverity
 } from "./analysis-utils";
 import { generateGradCAMHeatmaps } from "./gradcam-generator";
 
@@ -157,11 +153,8 @@ function convertSCTResultsToAnalysisResults(
     infection: createDiagnosticFinding(infection, "Infection"),
     tumor: createDiagnosticFinding(tumor, "Tumor"),
 
-    // Restoring derived analysis cards
-    postureSimulation: generatePostureAnalysis(findings, imageType),
-    softTissueDegeneration: generateSoftTissueAnalysis(findings),
-    hiddenAbnormality: generateHiddenAbnormalityAnalysis(findings),
-    bloodFlowAnalysis: generateBloodFlowAnalysis(findings),
+    // Priority 1: Simulated hemodynamics & soft tissue cards removed to maintain clinical integrity
+
 
     findings: findings.map((f: any) => ({
       condition: f.condition,

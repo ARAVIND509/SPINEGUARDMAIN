@@ -12,11 +12,7 @@ import { generateGradCAMHeatmaps } from "./gradcam-generator";
 
 import {
   generateFinding,
-  getMaxSeverity,
-  generatePostureAnalysis,
-  generateSoftTissueAnalysis,
-  generateHiddenAbnormalityAnalysis,
-  generateBloodFlowAnalysis
+  getMaxSeverity
 } from "./analysis-utils";
 
 export async function analyzeWithMedicalModel(
@@ -67,11 +63,8 @@ export async function analyzeWithMedicalModel(
     infection: generateFinding(infection, "Infection"),
     tumor: generateFinding(tumor, "Tumor"),
 
-    // Restoring derived analysis cards
-    postureSimulation: generatePostureAnalysis(conditions, imageType),
-    softTissueDegeneration: generateSoftTissueAnalysis(conditions),
-    hiddenAbnormality: generateHiddenAbnormalityAnalysis(conditions),
-    bloodFlowAnalysis: generateBloodFlowAnalysis(conditions),
+    // Priority 1: Simulated hemodynamics & soft tissue cards removed to maintain clinical integrity
+
 
     findings: conditions.map(c => ({
       condition: c.condition,

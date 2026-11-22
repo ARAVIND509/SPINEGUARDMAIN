@@ -4,7 +4,6 @@ import multer from "multer";
 import path from "path";
 import { prisma } from "./db";
 import { storage } from "./storage";
-import { analyzeWithMedicalModel } from "./ml-analysis";
 import { analyzeWithSCT } from "./sct-bridge";
 import { insertPatientSchema, insertScanSchema, insertAnalysisSchema } from "@shared/schema";
 import { updateAnalysisProgress } from "./websocket-handler";
@@ -368,19 +367,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Analyze using Spinal Cord Toolbox for more accurate results
       let analysisResults;
       try {
-        updateAnalysisProgress(scanId, 30, "Running deep segmentation models...");
+        updateAnalysisProgress(scanId, 30, "Running deep learning inference on dedicated AI microservice...");
         analysisResults = await analyzeWithSCT(imageBuffer, scan.imageType);
-        updateAnalysisProgress(scanId, 80, "SCT analysis completed successfully");
-        console.log("SCT analysis completed successfully");
+        updateAnalysisProgress(scanId, 85, "Deep learning inference and Grad-CAM generation complete");
+        console.log("Deep learning analysis completed successfully via dedicated microservice");
       } catch (sctError) {
-        console.warn("SCT analysis failed, falling back to ML model:", sctError);
-        updateAnalysisProgress(scanId, 40, "SCT failed, falling back to medical model...");
-        // Fallback to ML model if SCT fails
-        analysisResults = await analyzeWithMedicalModel(
-          imageBuffer,
-          scan.imageType,
-          "ResNet50" // Standardize to ResNet50 as confirmed in ml-model.ts
-        );
+        console.error("AI microservice analysis failed:", sctError);
+        updateAnalysisProgress(scanId, 100, "Analysis failed");
+        return res.status(503).json({
+          error: `Medical AI Engine Error: ${(sctError as Error).message}. Heuristic/simulated fallback is disabled to ensure diagnostic reproducibility and clinical safety.`
+        });
       }
 
       updateAnalysisProgress(scanId, 90, "Finalizing diagnostic findings...");

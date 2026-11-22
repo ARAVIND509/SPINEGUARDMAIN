@@ -10,7 +10,7 @@ import {
   Cpu, Download, FileText, Loader2, RefreshCw, AlertCircle,
   CheckCircle2, Heart, Eye, Brain, Activity, Info,
   ChevronRight, Share2, Layers, Maximize2, Scan as ScanIcon,
-  ShieldCheck, Zap, Thermometer, Radar, X, Minimize2, AlertTriangle,
+  ShieldCheck, Shield, Zap, Thermometer, Radar, X, Minimize2, AlertTriangle,
   Siren, Microscope, Stethoscope, Clock
 } from "lucide-react";
 import Spine3DViewer from "@/components/Spine3DViewer";
@@ -435,76 +435,70 @@ export default function AIAnalysis() {
 
             {/* In-depth Panels Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Dynamic 3D Viewer */}
+              {/* 3D Anatomical Reference Model */}
               <div className="glass-card rounded-3xl p-6 relative overflow-hidden h-[400px]">
                 <div className="flex items-center justify-between mb-4 relative z-10">
-                  <h3 className="font-bold flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-blue-500" /> Bio-Dynamic Reconstruct
-                  </h3>
+                  <div>
+                    <h3 className="font-bold flex items-center gap-2 text-sm sm:text-base">
+                      <Zap className="h-4 w-4 text-blue-500" /> 3D Anatomical Reference Guide
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Illustrative canonical spine anatomy — not reconstructed from individual patient scan
+                    </p>
+                  </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-blue-500/5 text-blue-500 border-blue-500/20 text-[9px]">3D_RENDER</Badge>
+                    <Badge variant="outline" className="bg-blue-500/5 text-blue-500 border-blue-500/20 text-[9px]">REFERENCE_MODEL</Badge>
                     <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => setMaximizedView('3d')}>
                       <Maximize2 className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
-                <div className="absolute inset-0 top-16">
+                <div className="absolute inset-0 top-20">
                   <Spine3DViewer results={viewerResults as any} imageUrl={scan.imageUrl} visualMode={visualMode} isFullView={false} />
                 </div>
               </div>
 
-              {results?.postureSimulation && (
-                <div className="glass-card rounded-3xl p-6 relative overflow-hidden h-[400px] border border-emerald-500/10 hover-elevate">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-emerald-500" /> Functional Biomechanics
+              {/* Neural Model Architecture & Technical Provenance Card */}
+              <div className="glass-card rounded-3xl p-6 relative overflow-hidden h-[400px] border border-blue-500/10 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold flex items-center gap-2 text-sm sm:text-base">
+                      <Shield className="h-4 w-4 text-primary" /> Model Architecture & Provenance
                     </h3>
-                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                      {results?.postureSimulation.confidence}% CONF
+                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[9px]">
+                      DETERMINISTIC
                     </Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
-                    {[
-                      { label: 'Cervical', val: results?.postureSimulation.spinalCurvature?.cervical },
-                      { label: 'Thoracic', val: results?.postureSimulation.spinalCurvature?.thoracic },
-                      { label: 'Lumbar', val: results?.postureSimulation.spinalCurvature?.lumbar }
-                    ].map((c, i) => (
-                      <div key={i} className="p-2.5 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-center flex flex-col justify-center min-w-0">
-                        <p className="text-[7px] text-muted-foreground uppercase font-bold mb-1 truncate">{c.label}</p>
-                        <p className="text-sm sm:text-base font-bold text-emerald-600 truncate">
-                          {Number(c.val).toFixed(1)}°
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      <div className="flex-1 space-y-1">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Compensatory Patterns</p>
-                        <div className="flex flex-wrap gap-1">
-                          {results?.postureSimulation.compensatoryPatterns.map((p, i) => (
-                            <Badge key={i} variant="secondary" className="text-[9px] bg-emerald-500/10 text-emerald-700 border-none">{p}</Badge>
-                          ))}
-                        </div>
-                      </div>
+                  <div className="space-y-3 text-xs">
+                    <div className="flex justify-between py-1.5 border-b border-white/5">
+                      <span className="text-muted-foreground">Neural Backbone:</span>
+                      <span className="font-mono font-medium">PyTorch ResNet-50</span>
                     </div>
-
-                    <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold mb-2">Functional Limitations</p>
-                      <ul className="space-y-1">
-                        {(results?.postureSimulation.functionalLimitations ?? []).map((l, i) => (
-                          <li key={i} className="text-xs flex items-center gap-2">
-                            <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                            {l}
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="flex justify-between py-1.5 border-b border-white/5">
+                      <span className="text-muted-foreground">Classifier Head:</span>
+                      <span className="font-mono font-medium">Calibrated Negative Log-Odds (-2.0 bias)</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-white/5">
+                      <span className="text-muted-foreground">Input Preprocessing:</span>
+                      <span className="font-mono font-medium">224×224 Normalization (ImageNet params)</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-white/5">
+                      <span className="text-muted-foreground">Explainability Target:</span>
+                      <span className="font-mono font-medium">base_model.layer4[-1] Gradients</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 border-b border-white/5">
+                      <span className="text-muted-foreground">Hardware Tolerance:</span>
+                      <span className="font-mono font-medium">FP32 Deterministic (Jitter/Noise Free)</span>
                     </div>
                   </div>
                 </div>
-              )}
+
+                <div className="p-3 rounded-2xl bg-muted/40 border border-white/10 text-[10px] text-muted-foreground leading-relaxed">
+                  <span className="font-bold text-foreground">Medical Disclaimer: </span>
+                  SpinalGuard is an academic deep learning prototype. Heatmaps display convolutional feature map gradient attention and do not represent validated histological margins or definitive clinical diagnoses.
+                </div>
+              </div>
             </div>
           </div>
 
@@ -880,252 +874,6 @@ export default function AIAnalysis() {
                 </div>
               </div>
             )}
-          </div>
-        )}
-
-        {/* Advanced Analysis Features Section - FULL WIDTH */}
-        {results && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-4">Advanced Analysis Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Soft Tissue Degeneration Card */}
-              {results?.softTissueDegeneration && (
-                <Card className="glass-card">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-md bg-primary/10">
-                        <Activity className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">Soft Tissue Degeneration</CardTitle>
-                        <Badge className={`${results?.softTissueDegeneration.severity === 'severe' ? 'bg-rose-500' :
-                          results?.softTissueDegeneration.severity === 'moderate' ? 'bg-orange-500' :
-                            results?.softTissueDegeneration.severity === 'mild' ? 'bg-yellow-500' : 'bg-green-500'
-                          } text-white`}>
-                          {results?.softTissueDegeneration.severity.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Ligament Changes */}
-                      <div className="space-y-2">
-                        <p className="text-[10px] text-muted-foreground uppercase font-bold">Ligamentous Integrity</p>
-                        <ul className="space-y-1">
-                          <li className="text-xs flex flex-col">
-                            <span className="text-muted-foreground">Anterior:</span>
-                            <span>{results?.softTissueDegeneration.ligamentChanges?.anterior}</span>
-                          </li>
-                          <li className="text-xs flex flex-col">
-                            <span className="text-muted-foreground">Posterior:</span>
-                            <span>{results?.softTissueDegeneration.ligamentChanges?.posterior}</span>
-                          </li>
-                        </ul>
-                      </div>
-                      {/* Tendon / Disc Changes */}
-                      <div className="space-y-4">
-                        <div className="space-y-1">
-                          <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase font-bold">
-                            <span>Tendon Degeneration</span>
-                            <span>{results?.softTissueDegeneration.tendonDegeneration?.percentage}%</span>
-                          </div>
-                          <Progress value={results?.softTissueDegeneration.tendonDegeneration?.percentage} className="h-1.5" />
-                        </div>
-                        <div className="flex justify-between items-center p-3 rounded-xl bg-primary/5 border border-primary/10">
-                          <div className="text-center flex-1">
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold">Hydration</p>
-                            <p className="text-sm font-bold text-primary">{results?.softTissueDegeneration.discChanges?.hydration}%</p>
-                          </div>
-                          <div className="w-px h-8 bg-primary/20 mx-2" />
-                          <div className="text-center flex-1">
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold">Height Loss</p>
-                            <p className="text-sm font-bold text-primary">{results?.softTissueDegeneration.discChanges?.heightLoss}mm</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Hidden Abnormality Detection Card */}
-              {results?.hiddenAbnormality && (
-                <Card className="glass-card">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-md bg-amber-500/10">
-                        <Radar className="h-5 w-5 text-amber-500" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">Hidden Abnormality Detection</CardTitle>
-                        <Badge variant="outline" className="border-amber-500/30 text-amber-500">
-                          {results?.hiddenAbnormality.severity.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Infection Selection */}
-                      <div className={`p-3 rounded-2xl border ${results?.hiddenAbnormality.infections?.detected ? 'bg-rose-500/5 border-rose-500/20' : 'bg-muted/30 border-border'}`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Siren className={`h-3 w-3 ${results?.hiddenAbnormality.infections?.detected ? 'text-rose-500' : 'text-muted-foreground'}`} />
-                          <span className="text-[10px] font-bold uppercase">Infection Risk</span>
-                        </div>
-                        <p className="text-xs font-semibold">{results?.hiddenAbnormality.infections?.type}</p>
-                        {results?.hiddenAbnormality.infections?.location.length > 0 && (
-                          <p className="text-[10px] text-muted-foreground mt-1">Focus: {results?.hiddenAbnormality.infections?.location.join(', ')}</p>
-                        )}
-                      </div>
-
-                      {/* Tumor Selection */}
-                      <div className={`p-3 rounded-2xl border ${results?.hiddenAbnormality.tumorProbability?.detected ? 'bg-orange-500/5 border-orange-500/20' : 'bg-muted/30 border-border'}`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Microscope className={`h-3 w-3 ${results?.hiddenAbnormality.tumorProbability?.detected ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                          <span className="text-[10px] font-bold uppercase">Tumor Probability</span>
-                        </div>
-                        <p className="text-xs font-semibold">{results?.hiddenAbnormality.tumorProbability?.type}</p>
-                        {results?.hiddenAbnormality.tumorProbability?.detected && (
-                          <div className="flex justify-between items-center mt-2">
-                            <span className="text-[9px] text-muted-foreground">Size: {results?.hiddenAbnormality.tumorProbability?.size}</span>
-                            <Badge className="bg-orange-500/20 text-orange-600 text-[8px] border-none px-1.5 h-4">
-                              {results?.hiddenAbnormality.tumorProbability?.malignancyRisk}% RISK
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {(results?.hiddenAbnormality.subtleFindings?.length ?? 0) > 0 && (
-                      <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                        <p className="text-[9px] text-muted-foreground uppercase font-bold mb-2">Subtle Findings</p>
-                        <ul className="space-y-1">
-                          {(results?.hiddenAbnormality.subtleFindings ?? []).map((finding, idx) => (
-                            <li key={idx} className="text-[10px] flex items-center gap-2">
-                              <div className="w-1 h-1 rounded-full bg-amber-500" />
-                              {finding}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* 3D Posture Simulation Card */}
-              {results?.postureSimulation && (
-                <Card className="glass-card">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-md bg-blue-500/10">
-                        <Layers className="h-5 w-5 text-blue-500" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">3D Posture Simulation</CardTitle>
-                        <Badge variant="outline" className="border-blue-500/30 text-blue-500">
-                          {results?.postureSimulation.severity.toUpperCase()}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
-                        <p className="text-[8px] text-muted-foreground uppercase font-bold">Cervical</p>
-                        <p className="text-xs font-bold text-primary">{results?.postureSimulation.spinalCurvature?.cervical}°</p>
-                      </div>
-                      <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
-                        <p className="text-[8px] text-muted-foreground uppercase font-bold">Thoracic</p>
-                        <p className="text-xs font-bold text-primary">{results?.postureSimulation.spinalCurvature?.thoracic}°</p>
-                      </div>
-                      <div className="p-2 rounded-xl bg-primary/5 border border-primary/10">
-                        <p className="text-[8px] text-muted-foreground uppercase font-bold">Lumbar</p>
-                        <p className="text-xs font-bold text-primary">{results?.postureSimulation.spinalCurvature?.lumbar}°</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-[9px] text-muted-foreground uppercase font-bold">Functional Limitations</p>
-                      <div className="flex flex-wrap gap-1">
-                        {(results?.postureSimulation.functionalLimitations ?? []).map((lim, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-[8px] bg-blue-500/5 text-blue-600 border-none">{lim}</Badge>
-                        ))}
-                        {(results?.postureSimulation.functionalLimitations?.length ?? 0) === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
-                      </div>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
-                      <p className="text-[9px] text-muted-foreground uppercase font-bold mb-1">Posture Models</p>
-                      <div className="grid grid-cols-1 gap-1">
-                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Standing:</span> <span>{results?.postureSimulation.postureModels?.standing}</span></div>
-                        <div className="flex justify-between text-[10px]"><span className="text-muted-foreground">Sitting:</span> <span>{results?.postureSimulation.postureModels?.sitting}</span></div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Neural Perfusion / Blood Flow Analysis Card */}
-              {results?.bloodFlowAnalysis && (
-                <Card className="glass-card">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-md bg-emerald-500/10">
-                          <Heart className="h-5 w-5 text-emerald-500" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">Blood Flow Analysis</CardTitle>
-                          <Badge className={
-                            results?.bloodFlowAnalysis.severity === 'severe' ? 'bg-rose-500' :
-                              results?.bloodFlowAnalysis.severity === 'moderate' ? 'bg-orange-500' :
-                                'bg-emerald-500'
-                          }>
-                            {results?.bloodFlowAnalysis.severity.toUpperCase()}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-3 rounded-2xl bg-primary/[0.03] border border-primary/10">
-                      <div>
-                        <p className="text-2xl font-bold text-primary">{results?.bloodFlowAnalysis.spinalCordPerfusion?.flowRate}</p>
-                        <p className="text-[8px] text-muted-foreground uppercase font-bold">ML/MIN PERFUSION ({results?.bloodFlowAnalysis.spinalCordPerfusion?.level})</p>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] uppercase">{results?.bloodFlowAnalysis.spinalCordPerfusion?.adequacy}</Badge>
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-[9px] text-muted-foreground uppercase font-bold">Segmental Oxygenation</p>
-                      <div className="grid grid-cols-5 gap-1">
-                        {(results?.bloodFlowAnalysis.nerveRootOxygenation ?? []).slice(0, 5).map((n, i) => (
-                          <div key={i} className="flex flex-col items-center">
-                            <div className={`w-full h-1 rounded-full mb-1 ${n.oxygenation > 85 ? 'bg-emerald-500' : n.oxygenation > 70 ? 'bg-amber-500' : 'bg-rose-500'}`} />
-                            <span className="text-[8px] font-mono text-muted-foreground font-bold">{n.vertebralLevel}</span>
-                            <span className="text-[8px] font-mono">{n.oxygenation}%</span>
-                          </div>
-                        ))}
-                        {(results?.bloodFlowAnalysis.nerveRootOxygenation?.length ?? 0) === 0 && (
-                          <div className="col-span-5 text-[10px] text-muted-foreground italic text-center p-2">Standard vascular profile maintained</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {results?.bloodFlowAnalysis.vascularCompromise?.detected && (
-                      <div className="p-2 rounded-lg bg-rose-500/5 border border-rose-500/20 flex items-center gap-2">
-                        <AlertCircle className="h-3 w-3 text-rose-500" />
-                        <span className="text-[9px] text-rose-600 font-bold uppercase truncate">
-                          Compromise: {results?.bloodFlowAnalysis.vascularCompromise?.location.join(', ')}
-                        </span>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
           </div>
         )}
 

@@ -29,32 +29,15 @@ except ImportError:
     print("Warning: nibabel not installed", file=sys.stderr)
 
 
-def get_image_salt(image_array):
-    """Generate a deterministic jitter seed based on image entropy/pixel data."""
-    # Use a small sample of the image to generate a salt
-    sample = image_array[::20, ::20].flatten()
-    pixel_sum = float(np.sum(sample))
-    # Return a value between 0 and 1
-    return (pixel_sum * 1234.5678) % 1.0
-
-def calculate_confidence(base, distance, salt, scale=5.0, seed=0.0):
+def calculate_confidence(base, distance=0.0, salt=None, scale=5.0, seed=0.0):
     """
-    Calculate dynamic confidence based on distance from threshold and image salt.
-    base: starting confidence (e.g., 75)
-    distance: how far from the "edge" the measurement is
-    salt: image-specific jitter (0-1)
-    scale: sensitivity of the distance factor
-    seed: condition-specific seed (0-1)
+    Calculate deterministic confidence based strictly on metric distance from decision boundary.
+    No pseudorandom jitter, noise, or salt is applied to guarantee reproducible inference outputs.
+    Identical inputs produce identical outputs across executions.
     """
-    # Dynamic component based on distance
-    dynamic_boost = min(12.0, distance * scale)
-    # Combined jitter component (+/- 5.0%)
-    combined_salt = (float(salt) + float(seed) * 0.2) % 1.0
-    jitter = (combined_salt - 0.5) * 10.0
-    
-    final_conf = float(base) + dynamic_boost + jitter
-    # Keep within clinically plausible range (45-98)
-    return float(round(float(max(0.0, min(97.8, final_conf))), 1))
+    dynamic_boost = min(15.0, max(0.0, float(distance)) * float(scale))
+    final_conf = float(base) + dynamic_boost
+    return float(round(max(0.0, min(99.0, final_conf)), 1))
 
 
 def load_image(image_path, target_width=800):
@@ -578,8 +561,8 @@ def analyze_spine_image(input_path, output_dir):
         image_array, scale_factor = load_image(input_path)
         inv_scale = 1.0 / scale_factor
         
-        # Generate deterministic salt for this image
-        salt = get_image_salt(image_array)
+        # Deterministic inference: no artificial salt or jitter
+        salt = None
         
         vertebrae_resized = detect_vertebrae(image_array, scale_factor=1.0)
         
