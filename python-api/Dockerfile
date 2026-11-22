@@ -1,22 +1,26 @@
-# Python AI Microservice Dockerfile
+# Python AI Microservice Dockerfile for Hugging Face Spaces & Cloud Deployment
 FROM python:3.10-slim
-
-WORKDIR /app
 
 # Install system dependencies required for OpenCV and Scipy
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+# Set up user with UID 1000 (standard for Hugging Face Spaces non-root containers)
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH
 
-RUN pip install --no-cache-dir -r requirements.txt
+WORKDIR $HOME/app
 
-COPY . .
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-ENV PORT=8000
+COPY --chown=user . .
 
-EXPOSE 8000
+ENV PORT=7860
+EXPOSE 7860
 
-CMD ["gunicorn", "ai_server:app", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120"]
+CMD ["uvicorn", "ai_server:app", "--host", "0.0.0.0", "--port", "7860"]

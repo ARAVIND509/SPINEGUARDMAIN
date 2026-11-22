@@ -127,10 +127,17 @@ class SpineInferencePipeline:
         # Backward pass for Grad-CAM
         one_hot = torch.zeros_like(outputs)
         one_hot[0][target_class] = 1
-        outputs.backward(gradient=one_hot, retain_graph=True)
+        outputs.backward(gradient=one_hot, retain_graph=False)
         
         # Generate heatmap based on gradients
         base64_heatmap = self.generate_heatmap(target_class, pil_image)
+        
+        # Memory cleanup: release computation graph and hooks immediately
+        self.model.gradients = None
+        self.model.activations = None
+        del outputs, one_hot, input_tensor
+        import gc
+        gc.collect()
             
         results = {}
         for i, condition in enumerate(self.conditions):
@@ -157,7 +164,15 @@ _pipeline = None
 def get_pipeline():
     global _pipeline
     if _pipeline is None:
-        weights_file = os.path.join(os.path.dirname(__file__), 'models', 'spine_resnet50.pth')
+        models_dir = os.path.join(os.path.dirname(__file__), 'models')
+        weights_file = os.path.join(models_dir, 'spine_resnet50.pth')
+        if not os.path.exists(weights_file):
+            print("Notice: spine_resnet50.pth not found. Checking if auto-calibration is possible...")
+            try:
+                import calibrate_head
+                calibrate_head.calibrate()
+            except Exception as e:
+                print(f"Notice: Auto-calibration skipped or failed ({e}). Initializing base ResNet50.")
         _pipeline = SpineInferencePipeline(weights_file)
     return _pipeline
 
