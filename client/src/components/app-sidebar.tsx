@@ -42,6 +42,11 @@ const menuItems = [
     url: "/reports",
     icon: FileText,
   },
+  {
+    title: "Clinical QA & Analytics",
+    url: "/clinical-analytics",
+    icon: TrendingUp,
+  },
 ];
 
 export function AppSidebar() {
@@ -112,9 +117,9 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-4">
         <div className="text-xs text-muted-foreground">
-          <p className="font-semibold mb-1">Diagnostic Accuracy</p>
-          <p className="text-success font-bold">97.8%</p>
-          <p className="mt-1 text-[10px]">Validated on 10K+ cases</p>
+          <p className="font-semibold mb-1">Academic Prototype</p>
+          <p className="text-primary font-bold">ResNet-50 v2 (Layer4 XAI)</p>
+          <p className="mt-1 text-[10px]">Human Attestation Active</p>
         </div>
       </SidebarFooter>
     </Sidebar>

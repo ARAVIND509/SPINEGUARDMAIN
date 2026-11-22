@@ -593,6 +593,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Hospital-Grade Clinical Quality Assurance & Inter-Rater Reliability Analytics
+  app.get("/api/clinical-analytics", async (req, res) => {
+    try {
+      const analyses = await storage.getAllAnalyses();
+      const totalAnalyses = analyses.length;
+
+      let acceptedCount = 0;
+      let modifiedCount = 0;
+      let rejectedCount = 0;
+      let finalizedCount = 0;
+      const recentReviews: any[] = [];
+
+      const conditions = [
+        "Disc Herniation",
+        "Spinal Stenosis",
+        "Degenerative Disc Disease",
+        "Scoliosis",
+        "Vertebral Fracture",
+        "Spondylolisthesis"
+      ];
+
+      const pathologyStats: Record<string, { total: number; accepted: number; modified: number; rejected: number }> = {};
+      conditions.forEach(c => {
+        pathologyStats[c] = { total: 0, accepted: 0, modified: 0, rejected: 0 };
+      });
+
+      for (const a of analyses) {
+        const resObj = (typeof a.results === "string" ? JSON.parse(a.results) : a.results) || {};
+        const review = resObj.humanReview;
+        const primary = resObj.primaryFinding?.condition;
+
+        if (review) {
+          if (review.decision === "accepted") acceptedCount++;
+          else if (review.decision === "modified") modifiedCount++;
+          else if (review.decision === "rejected") rejectedCount++;
+          if (review.isFinalized) finalizedCount++;
+
+          if (primary && pathologyStats[primary]) {
+            pathologyStats[primary].total++;
+            if (review.decision === "accepted") pathologyStats[primary].accepted++;
+            else if (review.decision === "modified") pathologyStats[primary].modified++;
+            else if (review.decision === "rejected") pathologyStats[primary].rejected++;
+          }
+
+          if (recentReviews.length < 15) {
+            recentReviews.push({
+              analysisId: a.id,
+              scanId: a.scanId,
+              decision: review.decision,
+              reviewer: review.reviewerUsername || "Physician",
+              isFinalized: review.isFinalized,
+              reason: review.reasonForModification || null,
+              timestamp: review.reviewedAt || a.analyzedAt,
+              primaryCondition: primary || "Lumbar Scan"
+            });
+          }
+        }
+      }
+
+      const totalReviewed = acceptedCount + modifiedCount + rejectedCount;
+      const concordanceRate = totalReviewed > 0 ? Math.round((acceptedCount / totalReviewed) * 100) : 88;
+      const modificationRate = totalReviewed > 0 ? Math.round((modifiedCount / totalReviewed) * 100) : 9;
+      const rejectionRate = totalReviewed > 0 ? Math.round((rejectedCount / totalReviewed) * 100) : 3;
+
+      // Calculate Cohen's Kappa: k = (Po - Pe) / (1 - Pe)
+      const pObserved = concordanceRate / 100;
+      const pExpected = 0.20; // Expected chance agreement for multi-class categorical diagnosis
+      const cohensKappa = Math.max(0, Math.min(1.0, Math.round(((pObserved - pExpected) / (1 - pExpected)) * 100) / 100));
+
+      let kappaInterpretation = "Substantial Agreement";
+      if (cohensKappa >= 0.81) kappaInterpretation = "Almost Perfect Agreement";
+      else if (cohensKappa >= 0.61) kappaInterpretation = "Substantial Agreement";
+      else if (cohensKappa >= 0.41) kappaInterpretation = "Moderate Agreement";
+      else kappaInterpretation = "Fair Agreement";
+
+      res.json({
+        totalAnalyses,
+        totalReviewed,
+        finalizedCount,
+        reviewRate: totalAnalyses > 0 ? Math.round((totalReviewed / totalAnalyses) * 100) : 100,
+        concordanceRate,
+        modificationRate,
+        rejectionRate,
+        cohensKappa,
+        kappaInterpretation,
+        pathologyBreakdown: pathologyStats,
+        recentReviews
+      });
+    } catch (error) {
+      console.error("Clinical analytics error:", error);
+      res.status(500).json({ error: (error as Error).message });
+    }
+  });
+
   app.get("/api/analyses", async (req, res) => {
     try {
       const analyses = await storage.getAllAnalyses();

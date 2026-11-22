@@ -15,6 +15,7 @@ import AIAnalysis from "@/pages/ai-analysis";
 import Database from "@/pages/database";
 import Reports from "@/pages/reports";
 import Profile from "@/pages/profile";
+import ClinicalAnalytics from "@/pages/clinical-analytics";
 import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -166,6 +167,7 @@ function Router() {
         <Route path="/ai-analysis/:scanId" component={AIAnalysis} />
         <Route path="/database" component={Database} />
         <Route path="/reports" component={Reports} />
+        <Route path="/clinical-analytics" component={ClinicalAnalytics} />
         <Route path="/profile" component={Profile} />
         <Route path="/auth" component={LoginPage} />
         <Route component={NotFound} />
