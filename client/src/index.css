@@ -440,6 +440,35 @@
     animation: scan 3s linear infinite;
   }
 
+  @keyframes laser-sweep-vertical {
+    0% { top: 0%; opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { top: 100%; opacity: 0.8; }
+  }
+
+  @keyframes laser-sweep-horizontal {
+    0% { left: 0%; opacity: 0.6; }
+    50% { opacity: 0.9; }
+    100% { left: 100%; opacity: 0.6; }
+  }
+
+  @keyframes radar-ping-focal {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+  .animate-laser-v {
+    animation: laser-sweep-vertical 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  }
+
+  .animate-laser-h {
+    animation: laser-sweep-horizontal 3.1s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+  }
+
+  .animate-radar-ping {
+    animation: radar-ping-focal 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
   .bg-grid {
     background-image:
       linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),

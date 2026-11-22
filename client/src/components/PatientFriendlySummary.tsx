@@ -16,7 +16,8 @@ import {
   ArrowRight,
   BookOpen,
   Activity,
-  UserCheck
+  UserCheck,
+  Split
 } from "lucide-react";
 import type { AnalysisResults, ClinicalFinding } from "@shared/schema";
 
@@ -247,6 +248,35 @@ export function PatientFriendlySummary({ results, patientName }: PatientFriendly
             {severityConfig.advice}
           </p>
         </div>
+      </div>
+
+      {/* Interactive Normal vs Affected Anatomy Visual Prompt */}
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-indigo-950/40 via-blue-950/30 to-purple-950/20 border border-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shadow-inner">
+            <Split className="h-5 w-5" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+              See the Difference: Normal Spine vs. Your Scan
+              <Badge variant="outline" className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 text-[9px] font-mono">
+                SPLIT_CURTAIN
+              </Badge>
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Compare disc height, canal width, and nerve spacing directly against a verified healthy spine below.
+            </p>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          onClick={() => {
+            window.scrollBy({ top: 600, behavior: "smooth" });
+          }}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs whitespace-nowrap shadow-sm self-stretch sm:self-auto"
+        >
+          Compare Anatomy <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+        </Button>
       </div>
 
       {/* Questions to Ask Your Doctor Section */}

@@ -1,8 +1,9 @@
 import { useState, useCallback } from "react";
-import { Upload, FileImage, X } from "lucide-react";
+import { Upload, FileImage, X, Scan as ScanIcon, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { PixelScanVisualizer } from "@/components/PixelScanVisualizer";
 
 interface UploadScanProps {
   onUpload: (file: File, imageType: string) => void;
@@ -117,12 +118,28 @@ export function UploadScan({ onUpload, isUploading, uploadProgress }: UploadScan
               </div>
 
               {preview && (
-                <div className="mt-4 rounded-md overflow-hidden bg-muted">
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-full h-48 object-contain"
-                  />
+                <div className="mt-4">
+                  {isUploading ? (
+                    <PixelScanVisualizer
+                      imageUrl={preview}
+                      isScanning={true}
+                      progress={uploadProgress || 10}
+                      statusText={`Ingesting ${imageType} Scan • Decomposing Pixel Tensors...`}
+                      imageType={imageType}
+                      showDetails={true}
+                    />
+                  ) : (
+                    <div className="relative rounded-xl overflow-hidden border border-border/60 bg-muted/30">
+                      <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded bg-black/60 text-[10px] font-mono text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                        <ScanIcon className="h-3 w-3" /> Ready for Pixel Decomposition
+                      </div>
+                      <img
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-56 object-contain"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

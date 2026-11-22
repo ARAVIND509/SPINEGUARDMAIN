@@ -25,6 +25,8 @@ import { GradCAMViewer } from "@/components/GradCAMViewer";
 import { MedicalImageViewer } from "@/components/MedicalImageViewer";
 import { ReviewerWorkflowCard } from "@/components/ReviewerWorkflowCard";
 import { PatientFriendlySummary } from "@/components/PatientFriendlySummary";
+import { PixelScanVisualizer } from "@/components/PixelScanVisualizer";
+import { NormalVsAffectedComparator } from "@/components/NormalVsAffectedComparator";
 
 // Group Findings and Deduplicate
 const groupAndAverageFindings = (findings: any[]) => {
@@ -433,12 +435,23 @@ export default function AIAnalysis() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
           {/* Main Visualizer - 8 cols */}
           <div className="xl:col-span-8 flex flex-col gap-8">
-            <MedicalImageViewer
-              imageUrl={scan.imageUrl}
-              overlayUrl={primaryOverlayUrl}
-              imageType={scan.imageType}
-              metadata={scan.metadata}
-            />
+            {isAnalyzing ? (
+              <PixelScanVisualizer
+                imageUrl={scan.imageUrl}
+                isScanning={true}
+                progress={analysisProgress || 15}
+                statusText={currentStep}
+                imageType={scan.imageType}
+                showDetails={true}
+              />
+            ) : (
+              <MedicalImageViewer
+                imageUrl={scan.imageUrl}
+                overlayUrl={primaryOverlayUrl}
+                imageType={scan.imageType}
+                metadata={scan.metadata}
+              />
+            )}
 
             {/* In-depth Panels Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -653,6 +666,18 @@ export default function AIAnalysis() {
         {results && scan && (
           <GradCAMViewer
             originalImageUrl={scan.imageUrl}
+            results={results}
+            className="mb-12"
+          />
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* Comparative Anatomy: Normal vs Affected Radiology Comparator      */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {scan && (
+          <NormalVsAffectedComparator
+            patientImageUrl={scan.imageUrl}
+            imageType={scan.imageType}
             results={results}
             className="mb-12"
           />
