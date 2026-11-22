@@ -298,4 +298,7 @@ export interface AnalysisResults {
   gradCamHeatmaps?: GradCAMHeatmap[];
   heatmapTargets?: HeatmapTarget[];
   primaryFinding?: ClinicalFinding;
+  allHeatmaps?: Record<string, Record<string, string>>;
+  modelVersion?: string;
+  explanationStatus?: string;
 }

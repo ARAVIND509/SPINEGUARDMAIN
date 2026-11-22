@@ -39,9 +39,9 @@ def test_inference_determinism():
     img = Image.open(test_img_path)
     
     # Run inference run 1
-    results_run1, heatmap1, top_class1 = pipeline.predict(img)
+    results_run1, heatmap1, top_class1, heatmaps1 = pipeline.predict(img)
     # Run inference run 2
-    results_run2, heatmap2, top_class2 = pipeline.predict(img)
+    results_run2, heatmap2, top_class2, heatmaps2 = pipeline.predict(img)
     
     # Verify outputs are 100% identical
     for condition in results_run1:

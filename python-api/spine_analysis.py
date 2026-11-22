@@ -575,8 +575,8 @@ def analyze_spine_image(input_path, output_dir):
             }
             
         # 1. RUN TRUE DEEP LEARNING INFERENCE
-        # This calls the PyTorch ResNet-50 pipeline on the raw image
-        raw_ml_results, heatmap_b64, top_class = run_ml_inference(input_path)
+        # This calls the PyTorch ResNet-50 pipeline on the raw image with class-specific Grad-CAM
+        raw_ml_results, primary_heatmap, top_class, all_heatmaps = run_ml_inference(input_path)
         
         # 2. Format Findings for the UI
         checked_conditions = []
@@ -587,12 +587,13 @@ def analyze_spine_image(input_path, output_dir):
                 "condition": condition_name,
                 "severity": result["severity"],
                 "confidence": result["confidence"],
-                "location": "Spinal Region", # ML model predicts globally for now
-                "measurements": {"ai_probability": result["confidence"]}
+                "location": "Spinal Region", # ML model predicts globally
+                "measurements": {"ai_probability": result["confidence"]},
+                "heatmaps": all_heatmaps.get(condition_name, {})
             }
-            # Only attach the heatmap to the top predicted condition
-            if condition_name == top_class and heatmap_b64:
-                formatted["heatmap_b64"] = f"data:image/png;base64,{heatmap_b64}"
+            # Attach viridis colormap as default Grad-CAM heatmap
+            if condition_name in all_heatmaps and "viridis" in all_heatmaps[condition_name]:
+                formatted["heatmap_b64"] = f"data:image/png;base64,{all_heatmaps[condition_name]['viridis']}"
                 
             checked_conditions.append(formatted)
             
@@ -635,7 +636,10 @@ def analyze_spine_image(input_path, output_dir):
             "primary_finding": primary_finding,
             "summary": summary,
             "recommendations": cast(List[str], generate_recommendations(findings)),
-            "model_architecture": "ResNet-50 Deep Convolutional Neural Network"
+            "model_architecture": "ResNet-50 Deep Convolutional Neural Network",
+            "model_version": "PyTorch ResNet-50 v2 (Layer4 Grad-CAM)",
+            "all_heatmaps": all_heatmaps,
+            "explanation_status": "AUTHENTIC_PYTORCH_GRADIENTS"
         }
         
     except Exception as e:

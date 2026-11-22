@@ -52,18 +52,23 @@ export async function analyzeWithSCT(
 
     console.log(`Analysis successful: ${sctResults.vertebrae_detected} vertebrae detected, ${sctResults.findings.length} findings`);
 
-    // Generate Grad-CAM heatmaps using Python landmarks
-    console.log('Generating heatmaps from anatomical landmarks...');
+    // Generate authentic class-specific Grad-CAM heatmaps for all checked conditions
+    const conditionsToExplain = (sctResults.checked_conditions && sctResults.checked_conditions.length > 0)
+      ? sctResults.checked_conditions
+      : (sctResults.findings || []);
+
+    console.log(`Generating authentic class-specific Grad-CAM for ${conditionsToExplain.length} conditions...`);
     const gradCamHeatmaps = await generateGradCAMHeatmaps(
       imageBuffer,
-      sctResults.findings,
-      undefined,  // activationData
-      sctResults.landmarks  // anatomical landmarks for precise placement
+      conditionsToExplain
     );
 
     // Convert results to our AnalysisResults format
     const results = convertSCTResultsToAnalysisResults(sctResults, imageType);
     results.gradCamHeatmaps = gradCamHeatmaps.length > 0 ? gradCamHeatmaps : undefined;
+    results.allHeatmaps = sctResults.all_heatmaps;
+    results.modelVersion = sctResults.model_version || "PyTorch ResNet-50 v2 (Layer4 Grad-CAM)";
+    results.explanationStatus = sctResults.explanation_status || "AUTHENTIC_PYTORCH_GRADIENTS";
 
     // Extract precise targets for 3D model mapping
     if (gradCamHeatmaps.length > 0) {

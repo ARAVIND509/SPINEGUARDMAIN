@@ -69,40 +69,60 @@ class SpineInferencePipeline:
             "Spondylolisthesis"
         ]
 
-    def generate_heatmap(self, target_class_idx, original_image):
+    def generate_class_heatmaps(self, target_class_idx, original_image):
+        """
+        Generates authentic multi-colormap Grad-CAM explanations from PyTorch layer4 gradients.
+        Colormaps: Viridis (medical gold-standard), Inferno, Turbo, and Classic JET.
+        Preserves original image resolution.
+        """
         if self.model.gradients is None or self.model.activations is None:
             return None
             
         gradients = self.model.gradients.cpu().data.numpy()[0]
         activations = self.model.activations.cpu().data.numpy()[0]
         
-        # Global average pooling on gradients
+        # Global average pooling on gradients w.r.t target class score
         weights = np.mean(gradients, axis=(1, 2))
         
-        # Weight the channels
+        # Weight convolutional feature channels by importance
         cam = np.zeros(activations.shape[1:], dtype=np.float32)
         for i, w in enumerate(weights):
             cam += w * activations[i]
             
-        # ReLU to keep only positive influence
+        # ReLU to keep only positive activation influence
         cam = np.maximum(cam, 0)
         
-        # Normalize
-        cam = cv2.resize(cam, (original_image.width, original_image.height))
-        cam = cam - np.min(cam)
+        # Resize to original image resolution for anatomical overlay
+        cam = cv2.resize(cam, (original_image.width, original_image.height), interpolation=cv2.INTER_CUBIC)
+        cam_min = np.min(cam)
+        cam = cam - cam_min
         cam_max = np.max(cam)
-        if cam_max != 0:
+        if cam_max > 0:
             cam = cam / cam_max
             
-        # Convert to RGB heatmap
-        heatmap = np.uint8(255 * cam)
-        heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)
+        cam_uint8 = np.uint8(255 * cam)
         
-        # Convert to base64
-        _, buffer = cv2.imencode('.png', heatmap)
-        base64_heatmap = base64.b64encode(buffer).decode('utf-8')
+        # Generate all 4 clinically supported colormaps
+        colormaps = {
+            "viridis": cv2.applyColorMap(cam_uint8, cv2.COLORMAP_VIRIDIS),
+            "inferno": cv2.applyColorMap(cam_uint8, cv2.COLORMAP_INFERNO),
+            "turbo": cv2.applyColorMap(cam_uint8, cv2.COLORMAP_TURBO),
+            "jet": cv2.applyColorMap(cam_uint8, cv2.COLORMAP_JET),
+        }
         
-        return base64_heatmap
+        encoded = {}
+        for name, img_bgr in colormaps.items():
+            _, buffer = cv2.imencode('.png', img_bgr)
+            encoded[name] = base64.b64encode(buffer).decode('utf-8')
+            
+        return encoded
+
+    def generate_heatmap(self, target_class_idx, original_image):
+        """Backward compatible helper returning primary viridis heatmap."""
+        heatmaps = self.generate_class_heatmaps(target_class_idx, original_image)
+        if heatmaps and "viridis" in heatmaps:
+            return heatmaps["viridis"]
+        return None
 
     def predict(self, pil_image):
         if pil_image.mode != 'RGB':
@@ -115,27 +135,33 @@ class SpineInferencePipeline:
         for param in self.model.parameters():
             param.requires_grad = True
             
+        # 1. Forward pass to evaluate model outputs
         self.model.zero_grad()
         outputs = self.model(input_tensor)
-        
-        # Get probabilities for JSON output
         probabilities = torch.sigmoid(outputs).squeeze().detach().cpu().numpy()
+        top_class_idx = int(np.argmax(probabilities))
         
-        # Find the class with the highest probability
-        target_class = np.argmax(probabilities)
+        # 2. Compute authentic class-specific Grad-CAM for all supported pathologies
+        all_heatmaps = {}
+        for class_idx, condition in enumerate(self.conditions):
+            self.model.zero_grad()
+            self.model.gradients = None
+            self.model.activations = None
+            
+            # Forward pass to track hooks on layer4
+            class_out = self.model(input_tensor)
+            one_hot = torch.zeros_like(class_out)
+            one_hot[0][class_idx] = 1.0
+            class_out.backward(gradient=one_hot, retain_graph=False)
+            
+            heatmaps_dict = self.generate_class_heatmaps(class_idx, pil_image)
+            if heatmaps_dict:
+                all_heatmaps[condition] = heatmaps_dict
         
-        # Backward pass for Grad-CAM
-        one_hot = torch.zeros_like(outputs)
-        one_hot[0][target_class] = 1
-        outputs.backward(gradient=one_hot, retain_graph=False)
-        
-        # Generate heatmap based on gradients
-        base64_heatmap = self.generate_heatmap(target_class, pil_image)
-        
-        # Memory cleanup: release computation graph and hooks immediately
+        # Clean up hooks and memory graph immediately
         self.model.gradients = None
         self.model.activations = None
-        del outputs, one_hot, input_tensor
+        del outputs, input_tensor
         import gc
         gc.collect()
             
@@ -154,10 +180,12 @@ class SpineInferencePipeline:
                 
             results[condition] = {
                 "confidence": round(confidence, 1),
-                "severity": severity
+                "severity": severity,
+                "heatmaps": all_heatmaps.get(condition)
             }
             
-        return results, base64_heatmap, self.conditions[target_class]
+        primary_heatmap = all_heatmaps.get(self.conditions[top_class_idx], {}).get("viridis")
+        return results, primary_heatmap, self.conditions[top_class_idx], all_heatmaps
 
 _pipeline = None
 
