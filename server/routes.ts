@@ -310,7 +310,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Persist standard image to secure file storage
         const saved = await saveScanFile(req.file.buffer, req.file.originalname, req.file.mimetype);
         imageUrl = saved.fileUrl;
-        console.log("Scan image stored to disk:", saved.fileName);
+        const fmt = req.file.mimetype.includes("png") ? "PNG" : (req.file.mimetype.includes("jpeg") || req.file.mimetype.includes("jpg") ? "JPEG" : "RASTER");
+        metadata = {
+          isDicom: false,
+          format: fmt,
+          pixelSpacing: null, // Standard formats lack physical mm calibration
+          windowCenter: null,
+          windowWidth: null,
+          modality: imageType || "Standard Imaging",
+          originalFilename: req.file.originalname,
+          sizeBytes: req.file.buffer.length
+        };
+        console.log("Standard scan stored to disk:", saved.fileName, "format:", fmt);
       }
 
       // Create scan record

@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SEVERITY_COLORS } from "@/lib/severity-colors";
 import { ScanAnnotationOverlay } from "@/components/ScanAnnotationOverlay";
 import { GradCAMViewer } from "@/components/GradCAMViewer";
+import { MedicalImageViewer } from "@/components/MedicalImageViewer";
 
 // Group Findings and Deduplicate
 const groupAndAverageFindings = (findings: any[]) => {
@@ -310,6 +311,12 @@ export default function AIAnalysis() {
     };
   }, [results, processedPredictions]);
 
+  const primaryOverlayUrl = (results?.gradCamHeatmaps && results.gradCamHeatmaps.length > 0)
+    ? results.gradCamHeatmaps[0].heatmapImageUrl
+    : (results?.allHeatmaps && Object.values(results.allHeatmaps)[0]?.viridis 
+        ? `data:image/png;base64,${Object.values(results.allHeatmaps)[0].viridis}` 
+        : null);
+
   if (!scan) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 bg-background">
@@ -371,68 +378,12 @@ export default function AIAnalysis() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
           {/* Main Visualizer - 8 cols */}
           <div className="xl:col-span-8 flex flex-col gap-8">
-            <Card className="glass-card border-none rounded-[2rem] overflow-hidden shadow-2xl relative">
-              <div className="absolute top-6 left-6 z-20 flex gap-2">
-                <Badge className="bg-background/60 backdrop-blur-md border border-border/50 text-[10px] py-1">SOURCE: {scan.imageType}</Badge>
-                <Badge className="bg-background/60 backdrop-blur-md border border-border/50 text-[10px] uppercase tracking-tighter flex items-center gap-1">
-                  <Thermometer className="h-3 w-3 text-rose-500" /> {activeHeatmap ? 'NEURAL_HEATMAP_ACTIVE' : 'RAW CALIBRATION'}
-                </Badge>
-                {visualMode !== 'standard' && (
-                  <Badge className="bg-primary/80 backdrop-blur-md border border-primary text-primary-foreground text-[10px] uppercase tracking-tighter animate-fadeIn">
-                    MODE: {visualMode}
-                  </Badge>
-                )}
-              </div>
-
-              <div className="flex h-[550px]">
-                <div ref={scanContainerRef} className="flex-1 relative bg-black group">
-                  <img
-                    src={scan.imageUrl}
-                    alt="Clinical Scan"
-                    className="w-full h-full object-contain transition-opacity duration-500"
-                  />
-
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-                    {activeHeatmap && (
-                      <div className="w-[400px] h-[400px] border border-rose-500/10 rounded-full animate-ping opacity-20" />
-                    )}
-                  </div>
-
-                  {/* Scanning Animation */}
-                  {isAnalyzing && (
-                    <div className="absolute inset-x-0 h-1 bg-primary/40 shadow-[0_0_20px_rgba(var(--primary),0.8)] z-10 animate-scan">
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-primary text-white text-[8px] font-bold rounded">SCANNING_LEVEL_DATA</div>
-                    </div>
-                  )}
-
-                  {/* Visualizer UI Overlays */}
-                  <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end z-20">
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setMaximizedView('main')}
-                        className="w-10 h-10 rounded-xl glass-panel border-white/10 text-foreground hover:bg-white/10"
-                      >
-                        <Maximize2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        onClick={() => setActiveHeatmapIdx(null)}
-                        className={`w-10 h-10 rounded-xl glass-panel border-white/10 text-foreground transition-all ${activeHeatmapIdx === null ? 'bg-primary/20 border-primary/30' : 'hover:bg-white/10'}`}
-                        title="Reset View"
-                      >
-                        <ScanIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-
-
-              </div>
-            </Card>
+            <MedicalImageViewer
+              imageUrl={scan.imageUrl}
+              overlayUrl={primaryOverlayUrl}
+              imageType={scan.imageType}
+              metadata={scan.metadata}
+            />
 
             {/* In-depth Panels Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

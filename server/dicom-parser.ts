@@ -20,15 +20,26 @@ export async function parseDICOM(buffer: Buffer): Promise<DicomData> {
         const dicomData = dcmjs.data.DicomMessage.readFile(buffer.buffer);
         const dataset = dcmjs.data.DicomMetaDictionary.naturalizeDataset(dicomData.dict);
 
-        // Extract metadata
+        // Extract metadata strictly preserving DICOM clinical tags
         const metadata: Record<string, any> = {
+            isDicom: true,
+            format: "DICOM",
             PatientName: dataset.PatientName?.Alphabetic || "Unknown",
             PatientID: dataset.PatientID || "N/A",
             StudyDate: dataset.StudyDate || "N/A",
             Modality: dataset.Modality || "N/A",
             Manufacturer: dataset.Manufacturer || "N/A",
             InstanceNumber: dataset.InstanceNumber || 0,
-            SliceThickness: dataset.SliceThickness || 0,
+            SliceThickness: dataset.SliceThickness || null,
+            PixelSpacing: dataset.PixelSpacing ? (Array.isArray(dataset.PixelSpacing) ? dataset.PixelSpacing : [dataset.PixelSpacing, dataset.PixelSpacing]) : null,
+            WindowCenter: Array.isArray(dataset.WindowCenter) ? dataset.WindowCenter[0] : (dataset.WindowCenter || null),
+            WindowWidth: Array.isArray(dataset.WindowWidth) ? dataset.WindowWidth[0] : (dataset.WindowWidth || null),
+            RescaleIntercept: dataset.RescaleIntercept ?? null,
+            RescaleSlope: dataset.RescaleSlope ?? null,
+            PhotometricInterpretation: dataset.PhotometricInterpretation || "MONOCHROME2",
+            ImageOrientationPatient: dataset.ImageOrientationPatient || null,
+            Rows: dataset.Rows || null,
+            Columns: dataset.Columns || null
         };
 
         // Extract pixel data and convert to image
