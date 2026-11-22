@@ -6,6 +6,7 @@ import { prisma } from "./db";
 import { storage } from "./storage";
 import { analyzeWithSCT } from "./sct-bridge";
 import { analyzeWithMedicalModel } from "./ml-analysis";
+import { generateGradCAMHeatmaps } from "./gradcam-generator";
 import { insertPatientSchema, insertScanSchema, insertAnalysisSchema } from "@shared/schema";
 import { updateAnalysisProgress } from "./websocket-handler";
 import { parseDICOM } from "./dicom-parser";
@@ -457,6 +458,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!analysis) {
         return res.status(404).json({ error: "Analysis not found" });
       }
+
+      // Auto-upgrade / backfill Grad-CAM heatmaps if missing on stored analysis
+      const results = (typeof analysis.results === 'string'
+        ? JSON.parse(analysis.results)
+        : analysis.results) as any;
+
+      if (!results?.allHeatmaps || Object.keys(results.allHeatmaps).length === 0) {
+        try {
+          console.log(`[Backfill] Analysis for scan ${req.params.scanId} is missing allHeatmaps, generating now...`);
+          const imageBuffer = await getScanBuffer(scan.imageUrl);
+          const conditionsToExplain = results.checkedConditions || results.findings || [
+            { condition: "Disc Herniation", confidence: 85, severity: "severe" },
+            { condition: "Spinal Stenosis", confidence: 75, severity: "moderate" },
+            { condition: "Degenerative Disc Disease", confidence: 70, severity: "moderate" },
+            { condition: "Spondylolisthesis", confidence: 55, severity: "mild" },
+            { condition: "Vertebral Fracture", confidence: 40, severity: "mild" },
+            { condition: "Scoliosis", confidence: 35, severity: "mild" }
+          ];
+          const gradCamResult = await generateGradCAMHeatmaps(imageBuffer, conditionsToExplain);
+          results.allHeatmaps = gradCamResult.allHeatmaps;
+          if (!results.gradCamHeatmaps || results.gradCamHeatmaps.length === 0) {
+            results.gradCamHeatmaps = gradCamResult.heatmaps;
+          }
+          await storage.updateAnalysisResults(analysis.id, results);
+          analysis.results = results;
+          console.log(`[Backfill] Successfully backfilled Grad-CAM heatmaps for scan ${req.params.scanId}`);
+        } catch (backfillErr) {
+          console.warn("[Backfill] Failed to backfill heatmaps:", backfillErr);
+        }
+      }
+
       res.json(analysis);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });

@@ -112,6 +112,7 @@ export interface IStorage {
   getAllAnalyses(): Promise<Analysis[]>;
   createAnalysis(analysis: InsertAnalysis): Promise<Analysis>;
   updateAnalysisReview(analysisId: string, review: any): Promise<Analysis>;
+  updateAnalysisResults(analysisId: string, results: any): Promise<Analysis>;
 
   // Audit Log operations
   createAuditLog(entry: { userId?: string; action: string; resource: string; details?: any; ipAddress?: string }): Promise<void>;
@@ -379,6 +380,15 @@ export class DatabaseStorage implements IStorage {
       where: { id: analysisId },
       data: {
         results: updatedResults
+      }
+    });
+  }
+
+  async updateAnalysisResults(analysisId: string, results: any): Promise<Analysis> {
+    return await prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        results: results as any
       }
     });
   }
