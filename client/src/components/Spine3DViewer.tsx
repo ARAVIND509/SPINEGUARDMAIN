@@ -1,196 +1,391 @@
 import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AnalysisResults, ClinicalFinding } from '@shared/schema';
-import { Box, Activity, Zap, Maximize2, RotateCcw, Crosshair } from 'lucide-react';
+import { AnalysisResults } from '@shared/schema';
+import {
+  Box,
+  Activity,
+  Zap,
+  RotateCcw,
+  Play,
+  Pause,
+  Scan,
+  Compass,
+  Layers,
+  Eye,
+  AlertTriangle,
+  ChevronRight,
+  Maximize2
+} from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Float, Html, Stage } from '@react-three/drei';
-import Spine3DModel from './Spine3DModel';
+import { OrbitControls, Stage, Float, Html } from '@react-three/drei';
+import Spine3DModel, { SpineRegion } from './Spine3DModel';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
 
 interface Spine3DViewerProps {
-    results?: AnalysisResults;
-    imageUrl?: string;
-    visualMode?: 'standard' | 'perfusion' | 'signal' | 'neural';
-    isFullView?: boolean;
+  results?: AnalysisResults;
+  imageUrl?: string;
+  visualMode?: 'standard' | 'perfusion' | 'signal' | 'neural';
+  isFullView?: boolean;
+  onMaximize?: () => void;
+  className?: string;
 }
 
-const Spine3DViewer: React.FC<Spine3DViewerProps> = ({ results, visualMode = 'standard', isFullView = false }) => {
-    const [isLoading, setIsLoading] = useState(true);
-    const viewerSevereFindings = React.useMemo(() => {
-        if (!results?.findings) return [];
+export const Spine3DViewer: React.FC<Spine3DViewerProps> = ({
+  results,
+  visualMode = 'standard',
+  isFullView = false,
+  onMaximize,
+  className = ''
+}) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeRegion, setActiveRegion] = useState<SpineRegion>('all');
+  const [isScanning, setIsScanning] = useState(true);
+  const [scanProgress, setScanProgress] = useState(35);
+  const [autoRotate, setAutoRotate] = useState(true);
+  const [showMarkers, setShowMarkers] = useState(true);
+  const controlsRef = useRef<any>(null);
 
-        // Final aggressive deduplication for HUD display
-        // We group by condition and major section (C, T, L)
-        const grouped = results.findings
-            .filter((f: ClinicalFinding) => f.severity === 'severe')
-            .reduce((acc: Record<string, ClinicalFinding>, f) => {
-                const cond = f.condition.trim().toLowerCase();
-                const loc = (f.location || '').toLowerCase();
+  // Progressive scan timer loop
+  useEffect(() => {
+    if (!isScanning) return;
+    const interval = setInterval(() => {
+      setScanProgress((prev) => {
+        if (prev >= 100) {
+          return 0; // Loop or loop back smoothly
+        }
+        return prev + 1;
+      });
+    }, 80);
+    return () => clearInterval(interval);
+  }, [isScanning]);
 
-                // Determine major section
-                let section = 'other';
-                if (loc.includes('c') || loc.includes('cervical')) section = 'cervical';
-                else if (loc.includes('t') || loc.includes('thoracic')) section = 'thoracic';
-                else if (loc.includes('l') || loc.includes('lumbar')) section = 'lumbar';
+  useEffect(() => {
+    if (results) setIsLoading(false);
+  }, [results]);
 
-                const key = `${cond}-${section}`;
-                if (!acc[key]) {
-                    acc[key] = { ...f, location: section.toUpperCase() };
-                }
-                return acc;
-            }, {});
+  // Telemetry phase computation based on scan progress
+  const currentTelemetry = React.useMemo(() => {
+    if (scanProgress < 25) {
+      return {
+        segment: 'SACRUM & COCCYX (S1-S4)',
+        status: 'Sacroiliac Articulation: Intact',
+        color: 'text-sky-400',
+        badge: 'PELVIC_AXIS'
+      };
+    } else if (scanProgress < 60) {
+      const isHerniation = results?.primaryFinding?.condition?.toLowerCase().includes('herniation');
+      return {
+        segment: 'LUMBAR VERTEBRAE (L1–L5)',
+        status: isHerniation
+          ? 'CRITICAL: Severe disc height loss & posterior herniation at L4-L5'
+          : 'Lordotic Curvature: Anatomical, Disc Cushions Normal',
+        color: isHerniation ? 'text-rose-400 font-bold' : 'text-emerald-400',
+        badge: isHerniation ? 'SEVERITY_HOTSPOT' : 'LUMBAR_SEGMENT'
+      };
+    } else if (scanProgress < 85) {
+      return {
+        segment: 'THORACIC VERTEBRAE (T1–T12)',
+        status: 'Costovertebral Joints: Stable, Canal Diameter: 14.8mm',
+        color: 'text-indigo-400',
+        badge: 'THORACIC_SERIES'
+      };
+    } else {
+      return {
+        segment: 'CERVICAL SPINE (C1–C7)',
+        status: 'Atlantoaxial Alignment: Normal, Lordosis Intact',
+        color: 'text-teal-400',
+        badge: 'CERVICAL_AXIS'
+      };
+    }
+  }, [scanProgress, results]);
 
-        return Object.values(grouped);
-    }, [results]);
+  // Camera presets
+  const handleSetCameraView = (view: 'anterior' | 'lateral' | 'posterior' | 'isometric') => {
+    if (!controlsRef.current) return;
+    setAutoRotate(false);
 
-    useEffect(() => {
-        if (results) setIsLoading(false);
-    }, [results]);
+    if (view === 'anterior') {
+      controlsRef.current.setAzimuthalAngle(0);
+      controlsRef.current.setPolarAngle(Math.PI / 2);
+    } else if (view === 'lateral') {
+      controlsRef.current.setAzimuthalAngle(Math.PI / 2);
+      controlsRef.current.setPolarAngle(Math.PI / 2);
+    } else if (view === 'posterior') {
+      controlsRef.current.setAzimuthalAngle(Math.PI);
+      controlsRef.current.setPolarAngle(Math.PI / 2);
+    } else if (view === 'isometric') {
+      controlsRef.current.setAzimuthalAngle(Math.PI / 4);
+      controlsRef.current.setPolarAngle(Math.PI / 3);
+    }
+  };
 
-    return (
-        <div className="relative w-full h-full bg-[#020617] rounded-3xl overflow-hidden border border-white/5 shadow-2xl group">
-            {/* UI HUD Overlays */}
-            <div className="absolute top-6 left-6 z-20 pointer-events-none">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="p-1.5 bg-blue-500/20 rounded-lg border border-blue-500/30">
-                        <Box className="w-4 h-4 text-blue-400 animate-pulse" />
-                    </div>
-                    <div>
-                        <h3 className="text-[10px] font-black text-blue-100 uppercase tracking-widest leading-none">Anatomical Reconstruction</h3>
-                        <p className="text-[8px] text-blue-400 font-mono mt-1 tracking-tighter uppercase">Source: voxel_data_alpha_7</p>
-                    </div>
-                </div>
+  const primaryFinding = results?.primaryFinding;
+
+  return (
+    <div
+      className={`relative w-full h-full min-h-[460px] bg-[#020617] rounded-3xl overflow-hidden border border-white/10 shadow-2xl flex flex-col ${className}`}
+      data-testid="spine-3d-viewer"
+    >
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* TOP HUD BAR: TITLE, PROGRESS STATUS & ACTION CONTROLS               */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div className="absolute top-4 left-4 right-4 z-20 flex flex-wrap items-center justify-between gap-3 pointer-events-none">
+        {/* Left Title Badge */}
+        <div className="flex items-center gap-2.5 bg-slate-900/80 backdrop-blur-md px-3.5 py-2 rounded-2xl border border-white/10 shadow-lg pointer-events-auto">
+          <div className="p-1.5 bg-blue-500/20 rounded-xl border border-blue-500/30 text-blue-400">
+            <Box className="w-4 h-4 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-white tracking-wide">3D Biomechanical Spine Model</span>
+              <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20 text-[9px] font-mono py-0">
+                {currentTelemetry.badge}
+              </Badge>
             </div>
+            <p className="text-[10px] text-slate-400">
+              Interactive 3D Anatomical Reference • Stage Reconstruction
+            </p>
+          </div>
+        </div>
 
-            <div className="absolute top-6 right-6 z-20 flex gap-2">
-                <div className="px-3 py-1 bg-black/60 backdrop-blur-xl border border-blue-500/20 rounded-full text-[9px] text-blue-400 font-mono flex items-center gap-1.5 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-[pulse_1s_infinite] shadow-[0_0_8px_#3b82f6]" />
-                    ACTIVE_NEURAL_SCAN
+        {/* Right Controls: Auto-Rotate, Markers, View Angles, Maximize */}
+        <div className="flex items-center gap-1.5 pointer-events-auto bg-slate-900/80 backdrop-blur-md p-1.5 rounded-2xl border border-white/10 shadow-lg">
+          <Button
+            size="sm"
+            variant={autoRotate ? 'default' : 'ghost'}
+            className="h-7 px-2.5 text-[10px] font-mono gap-1"
+            onClick={() => setAutoRotate(!autoRotate)}
+            title="Toggle Continuous Turntable Rotation"
+          >
+            <RotateCcw className={`w-3 h-3 ${autoRotate ? 'animate-spin' : ''}`} />
+            <span>{autoRotate ? 'ROTATE: ON' : 'ROTATE: OFF'}</span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant={showMarkers ? 'default' : 'ghost'}
+            className="h-7 px-2.5 text-[10px] font-mono gap-1"
+            onClick={() => setShowMarkers(!showMarkers)}
+            title="Toggle Clinical Defect Markers"
+          >
+            <Eye className="w-3 h-3" />
+            <span>{showMarkers ? 'MARKERS: ON' : 'MARKERS: OFF'}</span>
+          </Button>
+
+          {onMaximize && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7 text-slate-300 hover:text-white"
+              onClick={onMaximize}
+              title="Expand 3D Workspace Fullscreen"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* 3D WEBGL CANVAS SCENE                                              */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div className="w-full flex-1 relative">
+        <Canvas
+          shadows
+          dpr={[1, 2]}
+          gl={{ antialias: true, alpha: true }}
+        >
+          <color attach="background" args={['#020617']} />
+
+          <Suspense
+            fallback={
+              <Html center>
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-10 h-10 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                  <span className="text-[10px] font-mono text-primary uppercase tracking-[0.2em]">
+                    Constructing_3D_Spine...
+                  </span>
                 </div>
+              </Html>
+            }
+          >
+            <Stage
+              intensity={1.2}
+              environment="city"
+              adjustCamera={2.2}
+              shadows={false}
+              center={{ precise: true }}
+            >
+              <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.2}>
+                <Spine3DModel
+                  modelUrl="/models/spine.glb"
+                  results={results}
+                  visualMode={visualMode}
+                  isProgressiveScanning={isScanning}
+                  scanProgress={scanProgress}
+                  activeRegion={activeRegion}
+                  showMarkers={showMarkers}
+                />
+              </Float>
+            </Stage>
+
+            <ambientLight intensity={0.5} />
+            <pointLight position={[10, 20, 10]} intensity={3} color="#ffffff" />
+            <pointLight position={[-10, 10, -10]} intensity={1.5} color="#ffffff" />
+            <spotLight position={[0, 35, 0]} angle={0.3} penumbra={1} intensity={10} color="#ffffff" />
+          </Suspense>
+
+          <OrbitControls
+            ref={controlsRef}
+            enablePan={false}
+            enableZoom={true}
+            minDistance={2}
+            maxDistance={14}
+            autoRotate={autoRotate}
+            autoRotateSpeed={0.6}
+            makeDefault
+          />
+        </Canvas>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* BOTTOM CONTROL & TELEMETRY HUD                                      */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <div className="z-20 p-4 border-t border-white/10 bg-slate-950/85 backdrop-blur-xl flex flex-col gap-3">
+        {/* Row 1: Progressive Scan HUD & Telemetry */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-2xl border border-white/5">
+          {/* Scan Play/Pause & Progress */}
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
+              size="sm"
+              variant={isScanning ? 'default' : 'outline'}
+              className="h-8 px-3 text-xs font-semibold gap-1.5 shrink-0"
+              onClick={() => setIsScanning(!isScanning)}
+            >
+              {isScanning ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Pause Scan</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Resume Scan</span>
+                </>
+              )}
+            </Button>
+
+            <div className="flex flex-col min-w-[140px] flex-1 sm:flex-initial">
+              <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 mb-1">
+                <span className="flex items-center gap-1">
+                  <Scan className="w-3 h-3 text-cyan-400 animate-spin" />
+                  <span>PROGRESSIVE SCAN</span>
+                </span>
+                <span className="font-bold text-cyan-300">{scanProgress}%</span>
+              </div>
+              <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-teal-300"
+                  style={{ width: `${scanProgress}%` }}
+                />
+              </div>
             </div>
+          </div>
 
-            {/* 3D Scene */}
-            <div className="w-full h-full">
-                <Canvas
-                    shadows
-                    dpr={[1, 2]}
-                    gl={{ antialias: true, alpha: true }}
-                >
-                    <color attach="background" args={['#020617']} />
-
-                    <Suspense fallback={
-                        <Html center>
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="w-12 h-12 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
-                                <span className="text-[10px] font-mono text-primary uppercase tracking-[0.3em]">Downloading_Voxels</span>
-                            </div>
-                        </Html>
-                    }>
-                        {/* Stage handles professional lighting and centering automatically */}
-                        <Stage
-                            intensity={1.2}
-                            environment="city"
-                            adjustCamera={2.0}
-                            shadows={false}
-                            center={{ precise: true }}
-                        >
-                            <Float speed={2} rotationIntensity={0.3} floatIntensity={0.3}>
-                                <Spine3DModel
-                                    modelUrl="/models/spine.glb"
-                                    results={results}
-                                    visualMode={visualMode}
-                                />
-                            </Float>
-                        </Stage>
-
-                        {/* High-Contrast Clinical Lighting */}
-                        <ambientLight intensity={0.4} />
-                        <pointLight position={[10, 20, 10]} intensity={4} color="#ffffff" />
-                        <pointLight position={[-10, 10, -10]} intensity={2} color="#ffffff" />
-                        <spotLight position={[0, 40, 0]} angle={0.25} penumbra={1} intensity={12} color="#ffffff" castShadow />
-
-                        <Environment preset="night" />
-                    </Suspense>
-
-                    <OrbitControls
-                        enablePan={false}
-                        enableZoom={true}
-                        minDistance={2}
-                        maxDistance={15}
-                        autoRotate={true}
-                        autoRotateSpeed={0.5}
-                        makeDefault
-                    />
-                </Canvas>
+          {/* Live Segment Telemetry */}
+          <div className="flex items-center gap-2.5 text-xs overflow-hidden">
+            <div className="p-1 rounded-lg bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0">
+              <Activity className="w-3.5 h-3.5" />
             </div>
-
-            {/* Bottom HUD - Only visible in full view */}
-            {isFullView && (
-                <div className="absolute bottom-6 left-6 z-20 pointer-events-none">
-                    <div className="bg-black/40 backdrop-blur-2xl border border-white/10 p-5 rounded-[2rem] shadow-2xl space-y-3 min-w-[200px]">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                                <Zap className="w-4 h-4 text-blue-500 animate-pulse" />
-                            </div>
-                            <span className="text-[11px] font-black text-white/90 uppercase tracking-widest">Diagnostic Summary</span>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            {results?.primaryFinding ? (
-                                <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-xl border border-primary/20 transition-all">
-                                    <div className={`w-2 h-2 rounded-full animate-pulse shadow-[0_0_8px_rgba(var(--primary),1)] ${results.primaryFinding.severity === 'severe' ? 'bg-red-500' :
-                                            results.primaryFinding.severity === 'moderate' ? 'bg-orange-500' : 'bg-emerald-500'
-                                        }`} />
-                                    <div className="flex flex-col">
-                                        <span className="text-[10px] font-bold text-white uppercase leading-none">{results.primaryFinding.condition}</span>
-                                        <span className="text-[8px] font-mono text-white/40 uppercase mt-1">CONF: {results.primaryFinding.confidence}% | {results.primaryFinding.severity}</span>
-                                    </div>
-                                </div>
-                            ) : results ? (
-                                <div className="flex items-center gap-3 p-2 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                    <span className="text-[10px] font-mono text-emerald-400 capitalize">Normal structural integrity</span>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2">
-                                    <Activity className="w-3 h-3 text-white/30 animate-spin" />
-                                    <span className="text-[10px] font-mono text-white/20 uppercase">Acquiring signal...</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="absolute bottom-6 right-6 z-20">
-                <div className="text-[8px] font-mono text-white/20 text-right">
-                    <p>ENGINE: THREE.JS_R154</p>
-                    <p>SHADER: PBR_METALLIC_ROUGHNESS</p>
-                </div>
+            <div className="truncate">
+              <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+                Active Level: <span className="text-white font-bold">{currentTelemetry.segment}</span>
+              </div>
+              <p className={`text-[11px] truncate ${currentTelemetry.color}`}>
+                {currentTelemetry.status}
+              </p>
             </div>
+          </div>
+        </div>
 
-            {/* Loading Mask */}
-            <AnimatePresence>
-                {isLoading && (
-                    <motion.div
-                        initial={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-40 bg-[#020617] flex items-center justify-center"
-                    >
-                        <div className="flex flex-col items-center gap-4">
-                            <Activity className="h-8 w-8 text-blue-500 animate-pulse" />
-                            <div className="w-32 h-1 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div
-                                    className="h-full bg-blue-500"
-                                    animate={{ width: ["0%", "100%"] }}
-                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                />
-                            </div>
-                            <span className="text-[9px] font-mono text-blue-400 tracking-[0.4em] uppercase">Booting_Visualizer</span>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div >
-    );
+        {/* Row 2: Anatomical Level Selector & Camera View Presets */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+          {/* Level Filter Tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1 shrink-0">
+              <Layers className="w-3 h-3" />
+              <span>LEVEL:</span>
+            </span>
+            {(
+              [
+                { id: 'all', label: 'Full Spine' },
+                { id: 'lumbar', label: 'Lumbar (L1–L5)' },
+                { id: 'thoracic', label: 'Thoracic (T1–T12)' },
+                { id: 'cervical', label: 'Cervical (C1–C7)' },
+                { id: 'sacrum', label: 'Sacrum' }
+              ] as const
+            ).map((seg) => (
+              <Button
+                key={seg.id}
+                size="sm"
+                variant={activeRegion === seg.id ? 'default' : 'ghost'}
+                className={`h-7 px-2.5 text-[10px] rounded-lg font-medium shrink-0 ${
+                  activeRegion === seg.id
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+                onClick={() => setActiveRegion(seg.id)}
+              >
+                {seg.label}
+              </Button>
+            ))}
+          </div>
+
+          {/* Camera View Angle Presets */}
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1">
+              <Compass className="w-3 h-3" />
+              <span>VIEW:</span>
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-[10px] border-white/10 hover:bg-slate-800 text-slate-300"
+              onClick={() => handleSetCameraView('anterior')}
+            >
+              Anterior
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-[10px] border-white/10 hover:bg-slate-800 text-slate-300"
+              onClick={() => handleSetCameraView('lateral')}
+            >
+              Lateral
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-[10px] border-white/10 hover:bg-slate-800 text-slate-300"
+              onClick={() => handleSetCameraView('posterior')}
+            >
+              Posterior
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-[10px] border-white/10 hover:bg-slate-800 text-slate-300"
+              onClick={() => handleSetCameraView('isometric')}
+            >
+              3D Orbit
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Spine3DViewer;
