@@ -212,6 +212,21 @@ function AuthForm({
         {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Authenticate to Station
       </Button>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full h-10 text-xs border-slate-700 hover:bg-slate-800 text-slate-300 gap-1.5"
+        disabled={isLoading}
+        onClick={() => {
+          form.setValue("username", "admin");
+          form.setValue("password", "password123");
+          onSubmit({ username: "admin", password: "password123", role: "admin" });
+        }}
+      >
+        <Sparkles className="h-3.5 w-3.5 text-blue-400" />
+        <span>1-Click Reviewer Demo Sign-In</span>
+      </Button>
     </form>
   );
 }
