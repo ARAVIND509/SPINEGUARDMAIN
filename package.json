@@ -1,6 +1,25 @@
 {
-  "name": "rest-express",
+  "name": "spineguard-ai",
   "version": "1.0.0",
+  "description": "Hospital-grade spinal radiology AI platform with authentic Grad-CAM explainability, 3D biomechanical spine digital twin, DICOM 3.0 PACS workstation, side-by-side comparative anatomy, and human-in-the-loop clinical attestation.",
+  "homepage": "https://spineguardmain.onrender.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ARAVIND509/SPINEGUARDMAIN.git"
+  },
+  "keywords": [
+    "radiology",
+    "medical-ai",
+    "dicom",
+    "grad-cam",
+    "threejs",
+    "react",
+    "typescript",
+    "spine-imaging",
+    "deep-learning",
+    "pacs-workstation",
+    "explainable-ai"
+  ],
   "type": "module",
   "license": "MIT",
   "scripts": {
